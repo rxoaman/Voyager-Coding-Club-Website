@@ -26,6 +26,8 @@ export const EVENTS = [
     location: "KCCITM",
     description: "Overnight AI hackathon powered by HackIndia and supported by OpenAI, hosted by Voyager Coding Club at KCCITM. Teams build working prototypes with 60,000 INR cash prizes, 40,000 INR rewards, and OpenAI API credits.",
     imageUrl: "https://i.postimg.cc/mg6PZb7B/13th-Protocol-AI-Hackathon-Banner.png",
+    registrationUrl: "https://www.linkedin.com/company/voyager-coding-club",
+    actionText: "Register Now",
     linkedinPostUrl: "https://www.linkedin.com/company/voyager-coding-club",
     highlights: ["Overnight 24-hour sprint", "60,000 INR cash prizes", "OpenAI API credits"],
     category: "Hackathon"

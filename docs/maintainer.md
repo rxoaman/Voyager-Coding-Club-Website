@@ -147,17 +147,53 @@ Each event is an object in `export const EVENTS = [...]`:
   id: "13th-protocol",                          // Unique URL-safe identifier
   title: "13th Protocol",                      // Event Name
   badge: "AI Hackathon",                       // Pill tag on top-left of banner
-  status: "Upcoming",                          // "Upcoming" or "Completed"
+  status: "Upcoming",                          // "Upcoming" (gets "Register Now" CTA) or "Completed" (gets "LinkedIn Post")
   date: "28 Nov 2026",                         // Date string
   time: "10:00 AM IST",                        // Time string
   location: "KCCITM",                          // ALWAYS strictly "KCCITM"
   description: "Overnight AI hackathon...",    // Short summary paragraph
   imageUrl: "https://i.postimg.cc/...",        // Banner image URL or local asset path
-  linkedinPostUrl: "https://...",              // Official LinkedIn announcement URL
+  registrationUrl: "https://forms.gle/...",    // Registration link (Google Form, Unstop, Devfolio, etc.)
+  actionText: "Register Now",                  // Custom button text (defaults to "Register Now" for upcoming)
+  linkedinPostUrl: "https://...",              // Official LinkedIn announcement/recap URL
   highlights: ["Overnight 24-hour sprint", "60,000 INR cash prizes"], // Feature pills
   category: "Hackathon"                        // "Hackathon", "Workshop", etc.
 }
 ```
+
+---
+
+### How to Change the Action Button to "Register Now" & Change the Registration Link
+
+The action button at the bottom of each event card automatically adapts based on whether the event is **Upcoming** or **Completed**:
+
+1. **For Upcoming Events:**
+   - The button automatically displays **"Register Now"** styled as a high-contrast emerald CTA button (`bg-emerald-500 text-black font-bold`).
+   - It clicks through to `registrationUrl` (or `registerUrl`, `actionUrl`, or `linkedinPostUrl`).
+2. **For Completed Events:**
+   - The button automatically displays **"LinkedIn Post"** with the LinkedIn logo, linking to `linkedinPostUrl`.
+
+#### How to change the registration link for an upcoming event:
+1. Open [`frontend/src/data/club.js`](file:///frontend/src/data/club.js).
+2. Locate the upcoming event object (e.g. `id: "13th-protocol"`).
+3. Set or update the `registrationUrl` property with your actual registration link:
+   ```javascript
+   registrationUrl: "https://unstop.com/hackathons/13th-protocol-kccitm",
+   ```
+   *(You can paste a Google Form URL, Unstop link, Devfolio page, Luma event, or any external registration URL here).*
+4. (Optional) Custom button text: If you want the button to say something other than "Register Now" (e.g., *"Apply on Unstop"* or *"RSVP Now"*), simply add:
+   ```javascript
+   actionText: "Apply on Unstop",
+   ```
+5. Save the file. The button on the website will instantly link to your new registration URL!
+
+#### Where this logic is defined in code:
+* **File:** [`frontend/src/components/EventCard.jsx`](file:///frontend/src/components/EventCard.jsx) (Lines ~86–105)
+* Checks:
+  ```jsx
+  const href = event.registrationUrl || event.registerUrl || event.actionUrl || event.linkedinPostUrl;
+  const label = event.actionText || (isUpcoming ? 'Register Now' : 'LinkedIn Post');
+  ```
 
 ---
 
