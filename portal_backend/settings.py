@@ -16,6 +16,7 @@ ALLOWED_HOSTS = ['*']
 INSTALLED_APPS = [
     # Voyager Portal Django App (Must be before staticfiles to override runserver)
     'club_api',
+    'django_browser_reload',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -27,6 +28,8 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     # Custom Zero-Dependency CORS Middleware
     'club_api.middleware.CustomCorsMiddleware',
+    # Auto-reloader middleware for instant browser refresh on changes
+    'django_browser_reload.middleware.BrowserReloadMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -83,6 +86,7 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_DIRS = [
     BASE_DIR / 'frontend' / 'dist',
     BASE_DIR / 'frontend' / 'public',
+    BASE_DIR / 'frontend' / 'src',
 ]
 
 # Assets (Logos, ID cards, Member portraits)

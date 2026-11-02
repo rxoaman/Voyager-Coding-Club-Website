@@ -34,9 +34,19 @@ def serve_assets(request, path):
     public_assets_dir = settings.BASE_DIR / 'frontend' / 'public' / 'assets'
     return serve(request, path, document_root=str(public_assets_dir))
 
+from django.contrib.staticfiles.urls import staticfiles_urlpatterns
+
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include('club_api.urls')),
+    path('__reload__/', include('django_browser_reload.urls')),
     re_path(r'^assets/(?P<path>.*)$', serve_assets, name='assets_serve'),
-    re_path(r'^(?!api/|admin/|assets/|static/).*$', spa_index_view, name='spa_root'),
+]
+
+# Static files url pattern for auto-reload listener and development assets
+urlpatterns += staticfiles_urlpatterns()
+
+# SPA catch-all route (serves index.html for client-side React routes)
+urlpatterns += [
+    re_path(r'^(?!api/|admin/|assets/|static/|__reload__/).*$', spa_index_view, name='spa_root'),
 ]

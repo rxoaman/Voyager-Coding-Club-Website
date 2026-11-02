@@ -185,7 +185,7 @@ export const TEAM_MEMBERS = [
     designation: "Management Lead",
     title: "Operations Lead",
     email: "harshsharma97748@gmail.com",
-    linkedin: "https://www.linkedin.com/company/voyager-coding-club",
+    linkedin: "www.linkedin.com/in/iharshhs",
     bio: "Coordinates event schedules, campus permissions, and logistics for Voyager hackathons.",
     skills: ["Operations", "Event Planning", "Team Leadership"]
   },
@@ -272,7 +272,7 @@ export const TEAM_MEMBERS = [
     designation: "Social Media Lead",
     title: "Media Lead",
     email: "chaitanyamathur4u@gmail.com",
-    linkedin: "https://www.linkedin.com/company/voyager-coding-club",
+    linkedin: "https://www.linkedin.com/in/mathurchaitanya/",
     bio: "Manages Voyager's LinkedIn and Instagram announcements, event recaps, and video updates.",
     skills: ["Content Writing", "Social Media", "Video Production"]
   },

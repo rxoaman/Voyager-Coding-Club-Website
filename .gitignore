@@ -32,6 +32,3 @@ frontend/.pnp.js
 Thumbs.db
 .vscode/
 .idea/
-
-# Documentation
-docs/
