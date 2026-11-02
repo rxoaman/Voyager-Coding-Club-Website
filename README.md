@@ -1,4 +1,4 @@
-# Voyager Coding Club Web Portal — Django Edition (`voyager-porta-django`)
+# Voyager Coding Club Web Portal — Django Edition (`voyager-portal-django`)
 
 A complete, production-ready implementation of the **Voyager Coding Club Web Portal** powered entirely by **Python & Django** as the backend, with zero Node runtime required to serve the application and APIs.
 
