@@ -1,0 +1,182 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    scroll-snap-type: y proximity;
+  }
+
+  body {
+    background-color: #000000;
+    color: #F3F4F6;
+    overflow-x: hidden;
+  }
+
+  /* Subtle minimal scrollbar */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: #000000;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #18221D;
+    border-radius: 3px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #10B981;
+  }
+}
+
+/* Minimalist dark canvas grid */
+.canvas-grid {
+  background-image: 
+    linear-gradient(to right, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+  background-size: 48px 48px;
+}
+
+/* Hide scrollbars for horizontal tracks while keeping scroll functional */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* ── Liquid Glass / Glassmorphism Styles ── */
+.liquid-glass {
+  background: rgba(18, 22, 28, 0.55);
+  backdrop-filter: blur(24px) saturate(190%);
+  -webkit-backdrop-filter: blur(24px) saturate(190%);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 
+    inset 0 1px 1px 0 rgba(255, 255, 255, 0.2),
+    inset 0 -1px 1px 0 rgba(0, 0, 0, 0.4),
+    0 24px 48px -12px rgba(0, 0, 0, 0.85);
+}
+
+.liquid-glass-card {
+  background: linear-gradient(135deg, rgba(25, 30, 40, 0.5) 0%, rgba(10, 14, 20, 0.6) 100%);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 
+    inset 0 1px 1px 0 rgba(255, 255, 255, 0.18),
+    0 16px 36px -10px rgba(0, 0, 0, 0.85);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.liquid-glass-card:hover {
+  border-color: rgba(16, 185, 129, 0.5);
+  box-shadow: 
+    inset 0 1px 2px 0 rgba(255, 255, 255, 0.3),
+    0 24px 48px -8px rgba(0, 0, 0, 0.95),
+    0 0 25px -5px rgba(16, 185, 129, 0.25);
+}
+
+.liquid-glass-button {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: inset 0 1px 1px 0 rgba(255, 255, 255, 0.15);
+  transition: all 0.2s ease;
+}
+
+.liquid-glass-button:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(16, 185, 129, 0.5);
+  box-shadow: inset 0 1px 2px 0 rgba(255, 255, 255, 0.25), 0 0 15px -3px rgba(16, 185, 129, 0.3);
+}
+
+/* Glass pedestal for cutout portrait */
+.glass-pedestal {
+  background: radial-gradient(ellipse at 50% 80%, rgba(16, 185, 129, 0.15), rgba(18, 24, 34, 0.6) 60%, transparent 80%);
+  backdrop-filter: blur(30px);
+  -webkit-backdrop-filter: blur(30px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 
+    inset 0 1px 1px 0 rgba(255, 255, 255, 0.25),
+    0 30px 60px -20px rgba(0, 0, 0, 0.95),
+    0 0 40px -10px rgba(16, 185, 129, 0.2);
+}
+
+/* Physical Lanyard ID Badge Styling */
+.badge-container {
+  perspective: 1000px;
+}
+
+.id-card-badge {
+  position: relative;
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+/* Lanyard slot fixture */
+.lanyard-slot {
+  width: 44px;
+  height: 10px;
+  margin: 0 auto;
+  background: #000000;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
+  position: relative;
+}
+
+.lanyard-clip {
+  position: absolute;
+  top: -14px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 22px;
+  height: 18px;
+  background: linear-gradient(180deg, #9CA3AF 0%, #4B5563 100%);
+  border-radius: 3px 3px 1px 1px;
+  z-index: 10;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.6);
+}
+
+.lanyard-clip::before {
+  content: '';
+  position: absolute;
+  top: 3px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 10px;
+  height: 3px;
+  background: #111827;
+  border-radius: 1px;
+}
+
+.lanyard-strap {
+  position: absolute;
+  top: -38px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 16px;
+  height: 26px;
+  background: #0B111E;
+  border-left: 2px solid #10B981;
+  border-right: 2px solid #10B981;
+  border-radius: 1px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.7);
+}
+
+/* Barcode simulation styling */
+.barcode-strip {
+  display: flex;
+  gap: 2px;
+  align-items: flex-end;
+  height: 18px;
+  opacity: 0.55;
+}
+
+.barcode-bar {
+  background-color: #E5E7EB;
+  height: 100%;
+}
