@@ -185,7 +185,7 @@ export const TEAM_MEMBERS = [
     designation: "Management Lead",
     title: "Operations Lead",
     email: "harshsharma97748@gmail.com",
-    linkedin: "www.linkedin.com/in/iharshhs",
+    linkedin: "https://www.linkedin.com/in/iharshhs",
     bio: "Coordinates event schedules, campus permissions, and logistics for Voyager hackathons.",
     skills: ["Operations", "Event Planning", "Team Leadership"]
   },
