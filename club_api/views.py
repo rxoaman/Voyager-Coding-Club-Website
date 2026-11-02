@@ -27,7 +27,7 @@ def get_club_info(request):
 def get_events(request):
     """
     Returns all club events with Upcoming events strictly first.
-    Dynamically loads from frontend/src/data/club.js or clubData.js,
+    Dynamically loads from frontend/src/data/clubData.js,
     with fallback to SQLite models.
     """
     category = request.GET.get('category')
@@ -56,7 +56,7 @@ def get_events(request):
 def get_team(request):
     """
     Returns sub-teams and active core members.
-    Dynamically loads from frontend/src/data/club.js or clubData.js,
+    Dynamically loads from frontend/src/data/clubData.js,
     with fallback to SQLite models.
     """
     sub_team = request.GET.get('subTeam') or request.GET.get('category')

@@ -58,7 +58,7 @@ export const EVENTS = [
     description: "National hackathon hosted at KCCITM. Over 300 developers built projects across web, cloud, and open source with a 1,00,000 INR prize pool.",
     imageUrl: "https://i.postimg.cc/DzKtXGr1/Build-with-Bharat-4-0-Hackathon-Poster.png",
     linkedinPostUrl: "https://www.linkedin.com/company/voyager-coding-club",
-    highlights: ["300+ participants", "1,00,000 INR prizes", "National teams"],
+    highlights: ["700+ participants", "1,00,000 INR prizes", "National teams"],
     category: "Hackathon"
   },
   {

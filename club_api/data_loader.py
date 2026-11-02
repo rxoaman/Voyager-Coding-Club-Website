@@ -1,8 +1,8 @@
 """
 Dynamic Data Access Layer for Voyager Coding Club (Django Edition)
 
-Directly parses and serves data from frontend/src/data/club.js and clubData.js.
-When someone edits club.js (or clubData.js), changes reflect immediately in the API
+Directly parses and serves data from frontend/src/data/clubData.js.
+When someone edits clubData.js, changes reflect immediately in the API
 and frontend without needing Node or manual database migrations.
 """
 
@@ -67,26 +67,19 @@ def _parse_js_export(content: str, var_name: str):
 
 def get_active_data_file() -> Path | None:
     """
-    Determines the active club data file.
-    Checks frontend/src/data/club.js and frontend/src/data/clubData.js.
-    Returns whichever file exists and was modified most recently.
+    Determines the active club data file (frontend/src/data/clubData.js).
     """
     data_dir = settings.BASE_DIR / 'frontend' / 'src' / 'data'
-    club_js = data_dir / 'club.js'
     club_data_js = data_dir / 'clubData.js'
-
-    candidates = []
-    if club_js.exists() and club_js.is_file():
-        candidates.append((club_js.stat().st_mtime, club_js))
     if club_data_js.exists() and club_data_js.is_file():
-        candidates.append((club_data_js.stat().st_mtime, club_data_js))
+        return club_data_js
 
-    if not candidates:
-        return None
+    # Fallback to club.js if present
+    club_js = data_dir / 'club.js'
+    if club_js.exists() and club_js.is_file():
+        return club_js
 
-    # Pick the one with highest mtime (most recently modified)
-    candidates.sort(key=lambda x: x[0], reverse=True)
-    return candidates[0][1]
+    return None
 
 
 def load_all_data(force_reload: bool = False) -> dict:

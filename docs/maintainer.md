@@ -37,11 +37,10 @@ The website is available in two synchronized editions:
 
 ### The Single Source of Truth for Data
 All club information, events, sub-teams, and members live inside:
-* **Primary:** [`frontend/src/data/club.js`](file:///frontend/src/data/club.js)
-* **Mirror:** [`frontend/src/data/clubData.js`](file:///frontend/src/data/clubData.js)
+* **File:** [`frontend/src/data/clubData.js`](file:///frontend/src/data/clubData.js)
 
 > [!TIP]
-> In `voyager-portal-django`, Django's `data_loader.py` dynamically watches both files. Whenever you save an edit to `club.js` (or `clubData.js`), the Django REST API (`/api/events/`, `/api/team/`, `/api/club/`) immediately serves the new data, and `django-browser-reload` automatically refreshes all connected browsers in ~50ms. No database migrations needed!
+> In `voyager-portal-django`, Django's `data_loader.py` dynamically monitors this file. Whenever you save an edit to `clubData.js`, the Django REST API (`/api/events/`, `/api/team/`, `/api/club/`) immediately serves the new data, and `django-browser-reload` automatically refreshes all connected browsers in ~50ms. No database migrations needed!
 
 ---
 
@@ -133,14 +132,14 @@ All club information, events, sub-teams, and members live inside:
 
 * **Container Component:** [`frontend/src/components/EventsGrid.jsx`](file:///frontend/src/components/EventsGrid.jsx)
 * **Card Component:** [`frontend/src/components/EventCard.jsx`](file:///frontend/src/components/EventCard.jsx)
-* **Data File:** [`frontend/src/data/club.js`](file:///frontend/src/data/club.js) (and `clubData.js`)
+* **Data File:** [`frontend/src/data/clubData.js`](file:///frontend/src/data/clubData.js) 
 
 ### Header Elements in `EventsGrid.jsx`:
 1. **Prominent Date Tag:** Line ~64–66 (`28 Nov 2026 • 13th Protocol`). Edit text or date directly in `EventsGrid.jsx`.
 2. **Section Title:** Line ~70 (`Club Events`).
 3. **Filter Buttons (ALL, UPCOMING, COMPLETED):** Lines ~76–111. Automatically count and filter events based on `event.status`.
 
-### Anatomy of an Event in `club.js`:
+### Anatomy of an Event in `clubData.js`:
 Each event is an object in `export const EVENTS = [...]`:
 ```javascript
 {
@@ -174,7 +173,7 @@ The action button at the bottom of each event card automatically adapts based on
    - The button automatically displays **"LinkedIn Post"** with the LinkedIn logo, linking to `linkedinPostUrl`.
 
 #### How to change the registration link for an upcoming event:
-1. Open [`frontend/src/data/club.js`](file:///frontend/src/data/club.js).
+1. Open [`frontend/src/data/clubData.js`](file:///frontend/src/data/clubData.js).
 2. Locate the upcoming event object (e.g. `id: "13th-protocol"`).
 3. Set or update the `registrationUrl` property with your actual registration link:
    ```javascript
@@ -198,7 +197,7 @@ The action button at the bottom of each event card automatically adapts based on
 ---
 
 ### How to ADD a New Event
-1. Open [`frontend/src/data/club.js`](file:///frontend/src/data/club.js).
+1. Open [`frontend/src/data/clubData.js`](file:///frontend/src/data/clubData.js).
 2. Inside `export const EVENTS = [ ... ]`, insert a new event object:
 ```javascript
   {
@@ -221,7 +220,7 @@ The action button at the bottom of each event card automatically adapts based on
 ---
 
 ### How to EDIT an Existing Event
-1. Open [`frontend/src/data/club.js`](file:///frontend/src/data/club.js).
+1. Open [`frontend/src/data/clubData.js`](file:///frontend/src/data/clubData.js).
 2. Locate the event by its `id` (e.g., `id: "13th-protocol"`).
 3. Modify any field:
    - Change `title` to rename the event.
@@ -234,7 +233,7 @@ The action button at the bottom of each event card automatically adapts based on
 ---
 
 ### How to DELETE an Event
-1. Open [`frontend/src/data/club.js`](file:///frontend/src/data/club.js).
+1. Open [`frontend/src/data/clubData.js`](file:///frontend/src/data/clubData.js).
 2. Highlight and delete the entire `{ ... },` block of the event you wish to remove from `EVENTS`.
 3. Save the file. The event will disappear from the UI and API instantly.
 
@@ -250,7 +249,7 @@ The action button at the bottom of each event card automatically adapts based on
 
 * **Container Component:** [`frontend/src/components/TeamGrid.jsx`](file:///frontend/src/components/TeamGrid.jsx)
 * **ID Card Component:** [`frontend/src/components/IdCard.jsx`](file:///frontend/src/components/IdCard.jsx)
-* **Data File:** [`frontend/src/data/club.js`](file:///frontend/src/data/club.js) (and `clubData.js`)
+* **Data File:** [`frontend/src/data/clubData.js`](file:///frontend/src/data/clubData.js) 
 
 ### Header Elements in `TeamGrid.jsx`:
 1. **Section Pill:** Line ~65 (`CLUB LEADERSHIP DIRECTORY`).
@@ -266,7 +265,7 @@ The action button at the bottom of each event card automatically adapts based on
 
 ---
 
-### Anatomy of a Member Object in `club.js`:
+### Anatomy of a Member Object in `clubData.js`:
 Each member is an object in `export const TEAM_MEMBERS = [...]`:
 ```javascript
 {
@@ -293,7 +292,7 @@ Each member is an object in `export const TEAM_MEMBERS = [...]`:
 ### How to ADD a New Team Member
 1. Place the member's transparent cutout portrait in `frontend/public/assets/members/<slug>.png`.
 2. (Optional) Place the ID card artwork in `frontend/public/assets/id-cards/<number>.png`.
-3. Open [`frontend/src/data/club.js`](file:///frontend/src/data/club.js).
+3. Open [`frontend/src/data/clubData.js`](file:///frontend/src/data/clubData.js).
 4. Add the new member object to `export const TEAM_MEMBERS = [ ... ]`:
 ```javascript
   {
@@ -318,7 +317,7 @@ Each member is an object in `export const TEAM_MEMBERS = [...]`:
 ---
 
 ### How to EDIT an Existing Team Member
-1. Open [`frontend/src/data/club.js`](file:///frontend/src/data/club.js).
+1. Open [`frontend/src/data/clubData.js`](file:///frontend/src/data/clubData.js).
 2. Search for the member's name or `id` (e.g., `"Harsh Sharma"`).
 3. Edit any field:
    - To update **LinkedIn**: change `linkedin: "https://www.linkedin.com/in/your-url/"`.
@@ -330,7 +329,7 @@ Each member is an object in `export const TEAM_MEMBERS = [...]`:
 ---
 
 ### How to DELETE a Team Member
-1. Open [`frontend/src/data/club.js`](file:///frontend/src/data/club.js).
+1. Open [`frontend/src/data/clubData.js`](file:///frontend/src/data/clubData.js).
 2. Delete the member's `{ ... },` block from `TEAM_MEMBERS`.
 3. Save the file. The card, its badge count, and its `/team/<id>` route are removed immediately.
 
@@ -353,11 +352,11 @@ Change both `subTeam` and `subTeamId` on the member object:
 * **Cutout Portrait Photos:**
   - Directory: [`frontend/public/assets/members/`](file:///frontend/public/assets/members/)
   - Format: PNG with a **transparent background** (BG removed).
-  - Linked via `photoUrl: "/assets/members/<filename>.png"` in `club.js`.
+  - Linked via `photoUrl: "/assets/members/<filename>.png"` in `clubData.js`.
   - Alternatively, a direct Google Drive link or external CDN URL can be pasted into `photoUrl`.
 * **ID Card Artwork Renders:**
   - Directory: [`frontend/public/assets/id-cards/`](file:///frontend/public/assets/id-cards/)
-  - Linked via `cardImage: "/assets/id-cards/<number>.png"` in `club.js`.
+  - Linked via `cardImage: "/assets/id-cards/<number>.png"` in `clubData.js`.
 
 ---
 
@@ -374,7 +373,7 @@ Change both `subTeam` and `subTeamId` on the member object:
   - Ambient emerald glow behind the figure.
 * **Badge Telemetry Tag:** Line ~90 (`VYR-TECH-001 • ACTIVE MEMBER`).
 * **Member Name & Designation:** Lines ~133–142.
-* **Biography Paragraph:** Lines ~145–150. Sourced directly from `member.bio` in `club.js`.
+* **Biography Paragraph:** Lines ~145–150. Sourced directly from `member.bio` in `clubData.js`.
 * **Specialized Skills Tags:** Lines ~154–168. Renders pill badges for every item in `member.skills`.
 * **Direct Action Buttons:** Lines ~172–215:
   - **Email Button:** Opens `mailto:${member.email}`.
@@ -512,7 +511,7 @@ Django automatically normalizes `0.0.0.0` to `0.0.0.0:8000` and displays:
   > On your Wi-Fi/LAN:  http://192.168.x.x:8000/
 ```
 * **Opening on Phone/Tablet:** Connect to the same Wi-Fi and open `http://<your-lan-ip>:8000/`.
-* **Auto-Reload:** Enabled automatically via `django-browser-reload`. Any edit to `club.js` immediately refreshes all connected devices without restarting the server!
+* **Auto-Reload:** Enabled automatically via `django-browser-reload`. Any edit to `clubData.js` immediately refreshes all connected devices without restarting the server!
 
 ### Node Edition (`voyager-portal`)
 Run both backend and frontend concurrently with:
@@ -540,4 +539,4 @@ frontend/public/assets/
     ├── pratyush-kumar-singh.png# Transparent cutout portrait
     └── ...                     # Cutouts for all active members
 ```
-To update an asset, replace the file with an image of the identical filename, or update the corresponding path in [`frontend/src/data/club.js`](file:///frontend/src/data/club.js).
+To update an asset, replace the file with an image of the identical filename, or update the corresponding path in [`frontend/src/data/clubData.js`](file:///frontend/src/data/clubData.js).
