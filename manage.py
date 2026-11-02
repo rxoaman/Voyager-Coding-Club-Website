@@ -1,11 +1,24 @@
 #!/usr/bin/env python
-"""Django's command-line utility for administrative tasks."""
+"""
+=============================================================================
+Voyager Coding Club - Django Management CLI Entry Point
+=============================================================================
+This script provides the command-line interface for administrative,
+development, and deployment tasks for the Voyager Web Portal.
+
+Common Commands:
+    python manage.py runserver 0.0.0.0:8000   # Starts development server on LAN
+    python manage.py buildfrontend            # Compiles Vite React SPA
+    python manage.py seed_data                # Seeds SQLite database
+    python manage.py check                    # Verifies Django setup integrity
+=============================================================================
+"""
 import os
 import sys
 
 
 def main():
-    """Run administrative tasks."""
+    """Configure settings module and delegate execution to Django core."""
     os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'portal_backend.settings')
     try:
         from django.core.management import execute_from_command_line

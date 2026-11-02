@@ -31,16 +31,24 @@ Welcome to the **Voyager Coding Club Web Portal** master maintainer manual. This
 
 ## 1. Architecture & Central Data Source
 
-The website is available in two synchronized editions:
-1. **Django Edition (`voyager-portal-django`)**: Pure Python/Django backend + precompiled React SPA. Includes built-in live parsing and `django-browser-reload` (zero Node.js required).
-2. **Node Edition (`voyager-portal`)**: Express API (`api/`) + Vite React frontend (`frontend/`).
+The Voyager Coding Club Web Portal is a complete, unified full-stack platform:
+* **Backend:** Django 6+ Python framework with custom REST endpoints, zero-dependency CORS, and `django-browser-reload`.
+* **Frontend:** High-performance React 18 Single Page Application with Tailwind CSS, Lucide icons, and Liquid Glassmorphism styling.
+* **Pre-compiled Distribution:** Production-grade JS/CSS bundles in `frontend/dist/`.
+
+### ⚠️ Important: Editing React JSX Components vs. Editing Club Data (`clubData.js`)
+
+| What You Are Changing | Where to Edit | Do You Need to Rebuild? |
+| :--- | :--- | :--- |
+| **Club Data** (Events, dates, links, team members, bios, skills) | [`frontend/src/data/clubData.js`](file:///frontend/src/data/clubData.js) | **NO BUILD NEEDED!** Django parses `clubData.js` dynamically on the fly. Save the file and the browser reloads in ~50ms. |
+| **UI Components & Layout** (`IdCard.jsx`, `Navbar.jsx`, `Home.jsx`, CSS) | `frontend/src/components/*.jsx` | **YES, RUN BUILD:** Browsers cannot run raw JSX. Run: <br>`python manage.py buildfrontend` <br>*(Takes ~3 seconds and compiles Vite into `frontend/dist/`)* |
 
 ### The Single Source of Truth for Data
 All club information, events, sub-teams, and members live inside:
 * **File:** [`frontend/src/data/clubData.js`](file:///frontend/src/data/clubData.js)
 
 > [!TIP]
-> In `voyager-portal-django`, Django's `data_loader.py` dynamically monitors this file. Whenever you save an edit to `clubData.js`, the Django REST API (`/api/events/`, `/api/team/`, `/api/club/`) immediately serves the new data, and `django-browser-reload` automatically refreshes all connected browsers in ~50ms. No database migrations needed!
+> Django's `data_loader.py` dynamically monitors `clubData.js`. Whenever you save an edit to `clubData.js`, the Django REST API (`/api/events/`, `/api/team/`, `/api/club/`) immediately serves the new data, and `django-browser-reload` automatically refreshes all connected browsers in ~50ms. No database migrations needed!
 
 ---
 
@@ -513,14 +521,12 @@ Django automatically normalizes `0.0.0.0` to `0.0.0.0:8000` and displays:
 * **Opening on Phone/Tablet:** Connect to the same Wi-Fi and open `http://<your-lan-ip>:8000/`.
 * **Auto-Reload:** Enabled automatically via `django-browser-reload`. Any edit to `clubData.js` immediately refreshes all connected devices without restarting the server!
 
-### Node Edition (`voyager-portal`)
-Run both backend and frontend concurrently with:
+### Compiling React Frontend (`buildfrontend`)
+Whenever you edit React JSX components (`frontend/src/components/*.jsx`) or Tailwind styles (`frontend/src/index.css`), compile the bundles into `frontend/dist/` with:
 ```bash
-npm run dev:all
-# Or run frontend only with LAN exposure:
-cd frontend && npm run dev
+python manage.py buildfrontend
 ```
-Access on your local network at `http://<your-lan-ip>:5173/`.
+This runs Vite inside `frontend/` and updates the compiled bundles in ~3 seconds. Once finished, refresh your browser to see your UI updates!
 
 ---
 

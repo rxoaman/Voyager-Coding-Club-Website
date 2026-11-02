@@ -26,9 +26,9 @@ export const EVENTS = [
     location: "KCCITM",
     description: "Overnight AI hackathon powered by HackIndia and supported by OpenAI, hosted by Voyager Coding Club at KCCITM. Teams build working prototypes with 60,000 INR cash prizes, 40,000 INR rewards, and OpenAI API credits.",
     imageUrl: "https://i.postimg.cc/mg6PZb7B/13th-Protocol-AI-Hackathon-Banner.png",
-    registrationUrl: "https://www.linkedin.com/company/voyager-coding-club",
+    registrationUrl: "https://hackindia.org/2026/13th-protocol-an-ai-hackathon-2026",
     actionText: "Register Now",
-    linkedinPostUrl: "https://www.linkedin.com/company/voyager-coding-club",
+    linkedinPostUrl: "https://www.linkedin.com/",
     highlights: ["Overnight 24-hour sprint", "60,000 INR cash prizes", "OpenAI API credits"],
     category: "Hackathon"
   },
@@ -100,7 +100,7 @@ export const TEAM_MEMBERS = [
     designation: "Technical Lead",
     title: "Full-Stack Lead",
     email: "purushottam.kumxr@gmail.com",
-    linkedin: "https://www.linkedin.com/in/purushottam-kumar-042858331/",
+    linkedin: "https://www.linkedin.com/in/rxoaman/",
     bio: "Leads technical architecture and developer workflows at Voyager. Builds web systems using React, Node.js, and serverless functions.",
     skills: ["React", "Node.js", "TypeScript", "PostgreSQL", "Anime.js", "Vite"]
   },

@@ -51,15 +51,6 @@ export default function IdCard({ member }) {
             className="w-full h-full"
             imageClassName="w-full h-full object-contain p-1 group-hover:scale-103 transition-transform duration-300"
           />
-
-          <div className="absolute bottom-2 left-2 right-2 flex items-center justify-between pointer-events-none">
-            <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-black/80 text-emerald-400 border border-emerald-500/30 backdrop-blur-sm">
-              {member.subTeam}
-            </span>
-            <span className="bg-black/80 px-1.5 py-0.5 rounded text-[10px] font-mono text-zinc-300">
-              #{member.badgeNumber}
-            </span>
-          </div>
         </div>
 
         {/* Member Information - Larger readable typography */}
