@@ -10,6 +10,9 @@ ENV/
 .venv/
 *.log
 
+#data about  maintainer, skills,  etc.
+docs/
+
 # Static collection
 staticfiles/
 
@@ -32,6 +35,3 @@ frontend/.pnp.js
 Thumbs.db
 .vscode/
 .idea/
-
-# Documentation
-docs/

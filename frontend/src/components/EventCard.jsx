@@ -83,19 +83,32 @@ export default function EventCard({ event }) {
           )}
         </div>
 
-        {/* LinkedIn Post Action */}
+        {/* Action Link: Register Now for Upcoming events, or LinkedIn Post for completed */}
         <div className="mt-5 pt-3.5 border-t border-white/10 flex items-center justify-between">
           <span className="text-[11px] font-mono text-zinc-400">Voyager Coding Club</span>
 
           <a
-            href={event.linkedinPostUrl || 'https://www.linkedin.com/company/voyager-coding-club'}
+            href={event.registrationUrl || event.registerUrl || event.actionUrl || event.linkedinPostUrl || 'https://www.linkedin.com/company/voyager-coding-club'}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg liquid-glass-button text-zinc-200 hover:text-white font-mono text-xs transition-colors"
+            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-mono text-xs transition-all ${
+              isUpcoming
+                ? 'bg-emerald-500 hover:bg-emerald-400 text-black font-bold shadow-[0_0_12px_rgba(16,185,129,0.3)]'
+                : 'liquid-glass-button text-zinc-200 hover:text-white'
+            }`}
           >
-            <Linkedin className="w-3 h-3 text-emerald-400" />
-            <span>LinkedIn Post</span>
-            <ExternalLink className="w-3 h-3" />
+            {isUpcoming ? (
+              <>
+                <span>{event.actionText || 'Register Now'}</span>
+                <ExternalLink className="w-3.5 h-3.5 text-black" />
+              </>
+            ) : (
+              <>
+                <Linkedin className="w-3 h-3 text-emerald-400" />
+                <span>{event.actionText || 'LinkedIn Post'}</span>
+                <ExternalLink className="w-3 h-3" />
+              </>
+            )}
           </a>
         </div>
       </div>

@@ -1,6 +1,20 @@
+"""
+=============================================================================
+Voyager Coding Club - Custom Runserver Management Command
+=============================================================================
+Overrides Django's default runserver command to:
+1. Automatically bind to 0.0.0.0:8000 so the site is accessible across the
+   local Wi-Fi / LAN without requiring special flags.
+2. Normalize bare '0.0.0.0' or port-only inputs to prevent Windows CommandErrors.
+3. Automatically detect and display your computer's local Wi-Fi IP address
+   (e.g., http://192.168.1.5:8000/) for mobile testing.
+=============================================================================
+"""
+
 import socket
 import re
 from django.contrib.staticfiles.management.commands.runserver import Command as StaticfilesRunserverCommand
+
 
 class Command(StaticfilesRunserverCommand):
     help = "Starts the Voyager Coding Club web server (accessible locally and on your Wi-Fi/LAN)"
@@ -9,7 +23,12 @@ class Command(StaticfilesRunserverCommand):
     default_port = '8000'
 
     def handle(self, *args, **options):
-        # If user passed '0.0.0.0' or '0' without port, or None, normalize cleanly
+        """
+        Normalizes command-line arguments to prevent address/port syntax errors:
+        - python manage.py runserver            -> 0.0.0.0:8000
+        - python manage.py runserver 0.0.0.0    -> 0.0.0.0:8000
+        - python manage.py runserver 8080       -> 0.0.0.0:8080
+        """
         addrport = options.get('addrport')
         if not addrport:
             options['addrport'] = '0.0.0.0:8000'
@@ -20,7 +39,11 @@ class Command(StaticfilesRunserverCommand):
         return super().handle(*args, **options)
 
     def run(self, **options):
+        """
+        Detects local Wi-Fi IP address and displays formatted access URLs.
+        """
         try:
+            # Query an external routing address to determine local Wi-Fi network interface
             s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
             s.connect(("8.8.8.8", 80))
             local_ip = s.getsockname()[0]

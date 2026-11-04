@@ -26,7 +26,9 @@ export const EVENTS = [
     location: "KCCITM",
     description: "Overnight AI hackathon powered by HackIndia and supported by OpenAI, hosted by Voyager Coding Club at KCCITM. Teams build working prototypes with 60,000 INR cash prizes, 40,000 INR rewards, and OpenAI API credits.",
     imageUrl: "https://i.postimg.cc/mg6PZb7B/13th-Protocol-AI-Hackathon-Banner.png",
-    linkedinPostUrl: "https://www.linkedin.com/company/voyager-coding-club",
+    registrationUrl: "https://hackindia.org/2026/13th-protocol-an-ai-hackathon-2026",
+    actionText: "Register Now",
+    linkedinPostUrl: "https://www.linkedin.com/",
     highlights: ["Overnight 24-hour sprint", "60,000 INR cash prizes", "OpenAI API credits"],
     category: "Hackathon"
   },
@@ -56,7 +58,7 @@ export const EVENTS = [
     description: "National hackathon hosted at KCCITM. Over 300 developers built projects across web, cloud, and open source with a 1,00,000 INR prize pool.",
     imageUrl: "https://i.postimg.cc/DzKtXGr1/Build-with-Bharat-4-0-Hackathon-Poster.png",
     linkedinPostUrl: "https://www.linkedin.com/company/voyager-coding-club",
-    highlights: ["300+ participants", "1,00,000 INR prizes", "National teams"],
+    highlights: ["700+ participants", "1,00,000 INR prizes", "National teams"],
     category: "Hackathon"
   },
   {
@@ -98,7 +100,7 @@ export const TEAM_MEMBERS = [
     designation: "Technical Lead",
     title: "Full-Stack Lead",
     email: "purushottam.kumxr@gmail.com",
-    linkedin: "https://www.linkedin.com/in/purushottam-kumar-042858331/",
+    linkedin: "https://www.linkedin.com/in/rxoaman/",
     bio: "Leads technical architecture and developer workflows at Voyager. Builds web systems using React, Node.js, and serverless functions.",
     skills: ["React", "Node.js", "TypeScript", "PostgreSQL", "Anime.js", "Vite"]
   },
@@ -185,7 +187,7 @@ export const TEAM_MEMBERS = [
     designation: "Management Lead",
     title: "Operations Lead",
     email: "harshsharma97748@gmail.com",
-    linkedin: "https://www.linkedin.com/company/voyager-coding-club",
+    linkedin: "https://www.linkedin.com/in/iharshhs",
     bio: "Coordinates event schedules, campus permissions, and logistics for Voyager hackathons.",
     skills: ["Operations", "Event Planning", "Team Leadership"]
   },
@@ -272,7 +274,7 @@ export const TEAM_MEMBERS = [
     designation: "Social Media Lead",
     title: "Media Lead",
     email: "chaitanyamathur4u@gmail.com",
-    linkedin: "https://www.linkedin.com/company/voyager-coding-club",
+    linkedin: "https://www.linkedin.com/in/mathurchaitanya/",
     bio: "Manages Voyager's LinkedIn and Instagram announcements, event recaps, and video updates.",
     skills: ["Content Writing", "Social Media", "Video Production"]
   },

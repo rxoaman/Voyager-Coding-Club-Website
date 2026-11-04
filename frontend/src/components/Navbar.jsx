@@ -100,7 +100,7 @@ export default function Navbar({ navLogoTargetRef }) {
         {/* Right: Top right LinkedIn Link */}
         <div className="hidden sm:flex items-center gap-3">
           <a
-            href="https://www.linkedin.com/company/voyager-coding-club"
+            href="https://www.linkedin.com/company/voyager-kccitm/"
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center gap-2 px-3.5 py-1.5 rounded-lg border border-white/15 bg-zinc-950 text-xs font-mono text-zinc-200 hover:text-white hover:border-emerald-500 hover:bg-zinc-900 transition-all"
@@ -144,7 +144,7 @@ export default function Navbar({ navLogoTargetRef }) {
           ))}
           <div className="pt-3 border-t border-zinc-800">
             <a
-              href="https://www.linkedin.com/company/voyager-coding-club"
+              href="https://www.linkedin.com/company/voyager-kccitm/"
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center justify-between px-3 py-2 rounded-lg bg-zinc-900 text-xs font-mono text-zinc-200 hover:text-white"
