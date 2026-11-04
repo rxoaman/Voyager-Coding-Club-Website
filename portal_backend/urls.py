@@ -7,7 +7,7 @@ Routes incoming HTTP requests to their appropriate handlers:
 2. /api/                -> Voyager Club REST Endpoints (/events, /team, /club)
 3. /__reload__/         -> django-browser-reload Server-Sent Events daemon
 4. /assets/<path>       -> Static assets (JS/CSS bundles, ID cards, photos)
-5. /static/<path>       -> Development static files via staticfiles_urlpatterns
+5. /static/<path>       -> Static files (Django Admin styling, JS bundles)
 6. /*                   -> React Single Page Application (SPA catch-all)
 =============================================================================
 """
@@ -59,6 +59,15 @@ def serve_assets(request, path):
     return serve(request, path, document_root=str(public_assets_dir))
 
 
+def serve_static(request, path):
+    """
+    Serves collected static files (Django admin styling, JS, etc.)
+    Ensures static files resolve smoothly in production and Vercel environments.
+    """
+    static_dir = settings.BASE_DIR / 'staticfiles'
+    return serve(request, path, document_root=str(static_dir))
+
+
 # Core URL patterns
 urlpatterns = [
     # Django Admin site
@@ -77,6 +86,9 @@ if settings.DEBUG and not getattr(settings, 'IS_VERCEL', False):
 urlpatterns += [
     # Assets route (matches /assets/<path>)
     re_path(r'^assets/(?P<path>.*)$', serve_assets, name='assets_serve'),
+
+    # Static files route (matches /static/<path>)
+    re_path(r'^static/(?P<path>.*)$', serve_static, name='static_serve'),
 ]
 
 # Development static files handler (serves reload-listener.js and static files)

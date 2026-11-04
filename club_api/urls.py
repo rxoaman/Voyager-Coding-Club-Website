@@ -5,10 +5,11 @@ Voyager Coding Club - REST API URL Routing
 Prefix: /api/
 
 Routes (Both with and without trailing slashes are supported directly):
-- /api/health   & /api/health/     -> Backend status check
-- /api/club     & /api/club/       -> Organization metadata & branding
-- /api/events   & /api/events/     -> All events (Upcoming strictly first)
-- /api/team     & /api/team/       -> Active team members and sub-teams
+- /api/ & /api            -> API root telemetry
+- /api/health & /api/health/ -> Backend status check
+- /api/club   & /api/club/   -> Organization metadata & branding
+- /api/events & /api/events/ -> All events (Upcoming strictly first)
+- /api/team   & /api/team/   -> Active team members and sub-teams
 - /api/team/<slug> & /api/team/<slug>/ -> Individual member dossier by slug
 =============================================================================
 """
@@ -17,6 +18,9 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
+    # API root telemetry check (/api and /api/)
+    path('', views.health_check, name='api_root'),
+
     # Health telemetry check
     path('health', views.health_check, name='api_health_noslash'),
     path('health/', views.health_check, name='api_health'),
