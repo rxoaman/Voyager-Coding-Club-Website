@@ -4,6 +4,7 @@ Voyager Coding Club - Django Settings Configuration
 =============================================================================
 Defines application configuration, security parameters, middleware stack,
 database routing, static/media asset serving, and live auto-reload rules.
+Compatible with local development and Vercel serverless deployment.
 =============================================================================
 """
 
@@ -13,11 +14,14 @@ from pathlib import Path
 # Base directory: points to the root of voyager-portal-django
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# Security Settings
-SECRET_KEY = 'django-insecure-voyager-portal-coding-club-key-change-in-prod'
-DEBUG = True
+# Vercel Serverless Environment Detection
+IS_VERCEL = bool(os.environ.get('VERCEL'))
 
-# Allows connections from localhost, 127.0.0.1, and any local Wi-Fi / LAN IP (e.g. 192.168.x.x)
+# Security Settings
+SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-voyager-portal-coding-club-key-change-in-prod')
+DEBUG = os.environ.get('DJANGO_DEBUG', str(not IS_VERCEL)).lower() in ('true', '1')
+
+# Allows connections from localhost, 127.0.0.1, Vercel deployments, and custom domains
 ALLOWED_HOSTS = ['*']
 
 # Application Definition
@@ -26,8 +30,8 @@ INSTALLED_APPS = [
     # (Must remain before staticfiles to intercept runserver 0.0.0.0 arguments)
     'club_api',
 
-    # Browser live-reload daemon (Server-Sent Events)
-    'django_browser_reload',
+    # Browser live-reload daemon (Server-Sent Events) - Active in local development only
+    *(['django_browser_reload'] if (DEBUG and not IS_VERCEL) else []),
 
     # Standard Django administrative and authentication apps
     'django.contrib.admin',
@@ -43,8 +47,8 @@ MIDDLEWARE = [
     # 1. Custom Zero-Dependency CORS Middleware (permits API calls from any origin)
     'club_api.middleware.CustomCorsMiddleware',
 
-    # 2. Browser Reload Middleware: Injects SSE reload script into text/html responses
-    'django_browser_reload.middleware.BrowserReloadMiddleware',
+    # 2. Browser Reload Middleware: Injects SSE reload script into text/html responses (Local dev only)
+    *(['django_browser_reload.middleware.BrowserReloadMiddleware'] if (DEBUG and not IS_VERCEL) else []),
 
     # 3. Standard Django Security, Session, and CSRF Protection
     'django.middleware.security.SecurityMiddleware',
@@ -78,11 +82,24 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'portal_backend.wsgi.application'
 
-# Database Configuration: SQLite3 file located at the project root
+# Database Configuration:
+# On Vercel, the filesystem is read-only except /tmp, so we copy the sqlite DB to /tmp
+if IS_VERCEL:
+    import shutil
+    tmp_db = Path('/tmp') / 'db.sqlite3'
+    if not tmp_db.exists() and (BASE_DIR / 'db.sqlite3').exists():
+        try:
+            shutil.copyfile(BASE_DIR / 'db.sqlite3', tmp_db)
+        except Exception:
+            pass
+    db_path = tmp_db if tmp_db.exists() else (BASE_DIR / 'db.sqlite3')
+else:
+    db_path = BASE_DIR / 'db.sqlite3'
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'NAME': db_path,
     }
 }
 

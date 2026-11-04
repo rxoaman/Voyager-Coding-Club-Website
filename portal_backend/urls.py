@@ -66,10 +66,15 @@ urlpatterns = [
 
     # Voyager Club REST API routes
     path('api/', include('club_api.urls')),
+]
 
-    # Live auto-reloader SSE endpoints
-    path('__reload__/', include('django_browser_reload.urls')),
+# Live auto-reloader SSE endpoints (Active only in local development)
+if settings.DEBUG and not getattr(settings, 'IS_VERCEL', False):
+    urlpatterns += [
+        path('__reload__/', include('django_browser_reload.urls')),
+    ]
 
+urlpatterns += [
     # Assets route (matches /assets/<path>)
     re_path(r'^assets/(?P<path>.*)$', serve_assets, name='assets_serve'),
 ]

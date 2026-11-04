@@ -1,16 +1,15 @@
 """
-WSGI config for portal_backend project.
-
-It exposes the WSGI callable as a module-level variable named ``application``.
-
-For more information on this file, see
-https://docs.djangoproject.com/en/6.1/howto/deployment/wsgi/
+=============================================================================
+Voyager Coding Club - WSGI Web Server Configuration
+=============================================================================
+Exposes the WSGI callable as 'application' (standard WSGI) and 'app' (Vercel).
+=============================================================================
 """
 
 import os
-
 from django.core.wsgi import get_wsgi_application
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'portal_backend.settings')
 
 application = get_wsgi_application()
+app = application

@@ -530,6 +530,34 @@ This runs Vite inside `frontend/` and updates the compiled bundles in ~3 seconds
 
 ---
 
+### Deploying to Vercel
+
+The repository is configured for seamless deployment on [Vercel](https://vercel.com/):
+
+#### How Vercel Deployment Works:
+1. **`vercel.json`:** Defines dual build targets:
+   - `@vercel/python` compiles `portal_backend/wsgi.py` (and `api/index.py`) into high-speed serverless functions handling `/api/*` and `/admin/*`.
+   - `@vercel/static-build` builds `frontend/package.json` into static assets deployed globally across Vercel's Edge CDN.
+2. **SPA Routing:** Non-API requests (`/`, `/team/*`) automatically route to `index.html` via Vercel Edge rewrites.
+3. **Environment Detection:** When `VERCEL` is detected:
+   - Live auto-reload is turned off automatically.
+   - SQLite database is safely initialized in `/tmp/db.sqlite3` to comply with serverless read-only filesystems.
+   - All events and members are served dynamically from `frontend/src/data/clubData.js`.
+
+#### Steps to Deploy:
+1. Push your changes to the `main` branch:
+   ```bash
+   git push origin main
+   ```
+2. Log in to [Vercel Dashboard](https://vercel.com/).
+3. Click **Add New...** -> **Project** and select `Voyager-Coding-Club-Website`.
+4. (Optional) Set Environment Variables:
+   - `DJANGO_DEBUG`: `False` (defaults to False on Vercel)
+   - `SECRET_KEY`: Enter a random secret key for production
+5. Click **Deploy**. Vercel will build and assign a live URL (e.g., `https://voyager-coding-club-website.vercel.app`).
+
+---
+
 ## 12. Asset Directory Quick Reference
 
 ```

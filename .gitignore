@@ -10,6 +10,9 @@ ENV/
 .venv/
 *.log
 
+#data about  maintainer, skills,  etc.
+docs/
+
 # Static collection
 staticfiles/
 
