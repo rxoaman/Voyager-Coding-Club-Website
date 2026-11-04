@@ -1,5 +1,5 @@
 import React from 'react';
-import { Github, Instagram, Linkedin } from 'lucide-react';
+import { Instagram, Linkedin } from 'lucide-react';
 
 export default function Footer() {
   return (
@@ -23,7 +23,7 @@ export default function Footer() {
         {/* Socials */}
         <div className="flex items-center gap-3">
           <a
-            href="https://www.linkedin.com/company/voyager-coding-club"
+            href="https://www.linkedin.com/company/voyager-kccitm/"
             target="_blank"
             rel="noopener noreferrer"
             className="p-2 rounded-lg bg-zinc-950 border border-white/10 hover:border-emerald-500 text-zinc-300 hover:text-white transition-colors"
@@ -40,16 +40,6 @@ export default function Footer() {
             title="Instagram"
           >
             <Instagram className="w-4 h-4" />
-          </a>
-
-          <a
-            href="https://github.com/rxoaman/Voyager-s-Website"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="p-2 rounded-lg bg-zinc-950 border border-white/10 hover:border-emerald-500 text-zinc-300 hover:text-white transition-colors"
-            title="GitHub"
-          >
-            <Github className="w-4 h-4" />
           </a>
         </div>
 

@@ -24,7 +24,7 @@ class ClubProfile(models.Model):
     motto = models.TextField(default="Student coding community of KCC Institute of Technology & Management.")
     logo = models.CharField(max_length=300, default="/assets/Logo_Cube.png")
     card_back = models.CharField(max_length=300, default="/assets/id-cards/1.png")
-    linkedin = models.URLField(default="https://www.linkedin.com/company/voyager-coding-club")
+    linkedin = models.URLField(default="https://www.linkedin.com/company/voyager-kccitm/")
     instagram = models.URLField(default="https://www.instagram.com/voyager.kccitm/")
     github = models.URLField(default="https://github.com/rxoaman/Voyager-s-Website")
 

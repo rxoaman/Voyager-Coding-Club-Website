@@ -8,9 +8,8 @@ export const CLUB_INFO = {
   logo: "/assets/Logo_Cube.png",
   cardBack: "/assets/id-cards/1.png",
   socials: {
-    linkedin: "https://www.linkedin.com/company/voyager-coding-club",
-    instagram: "https://www.instagram.com/voyager.kccitm/",
-    github: "https://github.com/rxoaman/Voyager-s-Website"
+    linkedin: "https://www.linkedin.com/company/voyager-kccitm/",
+    instagram: "https://www.instagram.com/voyager.kccitm/"
   }
 };
 
@@ -43,7 +42,7 @@ export const EVENTS = [
     location: "KCCITM",
     description: "Regional hackathon powered by HackIndia. Teams prototyped software solutions to campus and community problems over 12 hours.",
     imageUrl: "https://images.unsplash.com/photo-1504384308090-c894fdcc538d?auto=format&fit=crop&w=1200&q=80",
-    linkedinPostUrl: "https://www.linkedin.com/company/voyager-coding-club",
+    linkedinPostUrl: "https://www.linkedin.com/company/voyager-kccitm/",
     highlights: ["12-hour build sprint", "Hardware and web tracks", "Industry mentors"],
     category: "Hackathon"
   },
@@ -57,7 +56,7 @@ export const EVENTS = [
     location: "KCCITM",
     description: "National hackathon hosted at KCCITM. Over 300 developers built projects across web, cloud, and open source with a 1,00,000 INR prize pool.",
     imageUrl: "https://i.postimg.cc/DzKtXGr1/Build-with-Bharat-4-0-Hackathon-Poster.png",
-    linkedinPostUrl: "https://www.linkedin.com/company/voyager-coding-club",
+    linkedinPostUrl: "https://www.linkedin.com/company/voyager-kccitm/",
     highlights: ["700+ participants", "1,00,000 INR prizes", "National teams"],
     category: "Hackathon"
   },
@@ -71,7 +70,7 @@ export const EVENTS = [
     location: "KCCITM",
     description: "Competitive programming contest and peer code review session. Participants solved algorithmic challenges in C++, Python, and Java.",
     imageUrl: "https://images.unsplash.com/photo-1515879218367-8466d910aaa4?auto=format&fit=crop&w=1200&q=80",
-    linkedinPostUrl: "https://www.linkedin.com/company/voyager-coding-club",
+    linkedinPostUrl: "https://www.linkedin.com/company/voyager-kccitm/",
     highlights: ["Algorithm speedrun", "Live leaderboard", "Code review"],
     category: "Competition"
   }
@@ -204,7 +203,7 @@ export const TEAM_MEMBERS = [
     designation: "Core Organizer",
     title: "Student Relations",
     email: "pradhankaruna071@gmail.com",
-    linkedin: "https://www.linkedin.com/company/voyager-coding-club",
+    linkedin: "https://www.linkedin.com/company/voyager-kccitm/",
     bio: "Manages student outreach, community communications, and onboarding new members.",
     skills: ["Communications", "Outreach", "Student Support"]
   },
@@ -255,7 +254,7 @@ export const TEAM_MEMBERS = [
     designation: "Core Organizer",
     title: "Logistics Support",
     email: "09jash2004@gmail.com",
-    linkedin: "https://www.linkedin.com/company/voyager-coding-club",
+    linkedin: "https://www.linkedin.com/company/voyager-kccitm/",
     bio: "Handles day-of-event stage equipment, audio-visual testing, and venue setup.",
     skills: ["Operations", "Logistics", "Equipment"]
   },

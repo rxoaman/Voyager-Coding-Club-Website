@@ -88,7 +88,7 @@ export default function EventCard({ event }) {
           <span className="text-[11px] font-mono text-zinc-400">Voyager Coding Club</span>
 
           <a
-            href={event.registrationUrl || event.registerUrl || event.actionUrl || event.linkedinPostUrl || 'https://www.linkedin.com/company/voyager-coding-club'}
+            href={event.registrationUrl || event.registerUrl || event.actionUrl || event.linkedinPostUrl || 'https://www.linkedin.com/company/voyager-kccitm/'}
             target="_blank"
             rel="noopener noreferrer"
             className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-mono text-xs transition-all ${
