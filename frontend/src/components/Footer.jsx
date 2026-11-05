@@ -50,7 +50,7 @@ export default function Footer() {
           © {new Date().getFullYear()} Voyager Coding Club, KCCITM.
         </div>
         <div>
-          Minimalist web portal
+          <a target="_blank" href="mailto:voyager.codingclub@gmail.com">Contact Us</a>
         </div>
       </div>
     </footer>

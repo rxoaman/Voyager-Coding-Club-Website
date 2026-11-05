@@ -41,9 +41,9 @@ export default function HeroScroll({ navLogoTargetRef }) {
             />
           </div>
 
-          <div className="mt-3 flex items-center gap-2 font-mono text-xs text-zinc-400 bg-zinc-950/80 px-3.5 py-1 rounded-full border border-white/10">
+          <div className="mt-3 flex items-center gap-2 font-mono text-xs text-zinc-200 bg-zinc-950/80 px-3.5 py-1 rounded-full border border-white/10">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-            <span>KCCITM // VOYAGER</span>
+            <span>VOYAGER CODING CLUB</span>
           </div>
         </div>
 
@@ -55,7 +55,7 @@ export default function HeroScroll({ navLogoTargetRef }) {
           {/* Eyebrow */}
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-zinc-900 border border-white/10 w-fit">
             <span className="font-mono text-xs text-emerald-400 uppercase tracking-widest">
-              Student Developer Community
+              Student Event Organizing Club
             </span>
           </div>
 
