@@ -1,22 +1,42 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
-import { Calendar, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Calendar, ChevronLeft, ChevronRight, Clock, MapPin } from 'lucide-react';
 import EventCard from './EventCard';
+
+function parseEventDate(dateStr) {
+  if (!dateStr) return 0;
+  const parsed = Date.parse(dateStr);
+  return isNaN(parsed) ? 0 : parsed;
+}
 
 export default function EventsGrid({ events = [] }) {
   const [filterStatus, setFilterStatus] = useState('all');
+  const [activeEventIndex, setActiveEventIndex] = useState(0);
   const trackRef = useRef(null);
 
+  // Timeline ordering: upcoming first (soonest upcoming first), then completed from new to old
   const filteredEvents = useMemo(() => {
     const list = events.filter((ev) => {
       if (filterStatus === 'all') return true;
       return ev.status?.toLowerCase() === filterStatus.toLowerCase();
     });
 
-    // Upcoming event is ALWAYS first in the display order
     return [...list].sort((a, b) => {
-      const aUpcoming = a.status?.toLowerCase() === 'upcoming' ? 1 : 0;
-      const bUpcoming = b.status?.toLowerCase() === 'upcoming' ? 1 : 0;
-      return bUpcoming - aUpcoming;
+      const aUpcoming = a.status?.toLowerCase() === 'upcoming';
+      const bUpcoming = b.status?.toLowerCase() === 'upcoming';
+
+      if (aUpcoming && !bUpcoming) return -1;
+      if (!aUpcoming && bUpcoming) return 1;
+
+      const aTime = parseEventDate(a.date);
+      const bTime = parseEventDate(b.date);
+
+      if (aUpcoming && bUpcoming) {
+        // Soonest upcoming event first
+        return aTime - bTime;
+      }
+
+      // Completed events: newest to oldest
+      return bTime - aTime;
     });
   }, [events, filterStatus]);
 
@@ -30,25 +50,60 @@ export default function EventsGrid({ events = [] }) {
     }
   };
 
+  const scrollToEvent = (index) => {
+    if (trackRef.current) {
+      const cardWidth = window.innerWidth < 640 ? 320 + 24 : 380 + 24;
+      trackRef.current.scrollTo({ left: index * cardWidth, behavior: 'smooth' });
+      setActiveEventIndex(index);
+    }
+  };
+
+  // Touchpad calibrated wheel listener and scroll tracker
   useEffect(() => {
     const el = trackRef.current;
     if (!el) return;
 
+    const handleScroll = () => {
+      const cardWidth = window.innerWidth < 640 ? 320 + 24 : 380 + 24;
+      const index = Math.round(el.scrollLeft / cardWidth);
+      setActiveEventIndex(Math.min(Math.max(index, 0), filteredEvents.length - 1));
+    };
+
     const onWheel = (e) => {
-      if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
-        const atLeft = el.scrollLeft <= 5 && e.deltaY < 0;
-        const atRight = Math.ceil(el.scrollLeft + el.clientWidth) >= el.scrollWidth - 5 && e.deltaY > 0;
-        
-        if (!atLeft && !atRight) {
-          e.preventDefault();
-          el.scrollBy({ left: e.deltaY * 1.5, behavior: 'smooth' });
-        }
+      // Allow native two-finger horizontal swipes to pass unhindered
+      if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) {
+        return;
+      }
+
+      const atLeft = el.scrollLeft <= 5 && e.deltaY < 0;
+      const atRight = Math.ceil(el.scrollLeft + el.clientWidth) >= el.scrollWidth - 5 && e.deltaY > 0;
+
+      // At edges, allow page vertical scrolling
+      if (atLeft || atRight) {
+        return;
+      }
+
+      // Calibrated Touchpad detection: continuous pixel delta with deltaMode === 0
+      const isTouchpad = e.deltaMode === 0 && Math.abs(e.deltaY) < 65;
+      e.preventDefault();
+
+      if (isTouchpad) {
+        // 1:1 direct tracking without queueing smooth animations
+        el.scrollLeft += e.deltaY;
+      } else {
+        // Discrete mouse wheel notches
+        el.scrollBy({ left: e.deltaY * 1.2, behavior: 'smooth' });
       }
     };
 
     el.addEventListener('wheel', onWheel, { passive: false });
-    return () => el.removeEventListener('wheel', onWheel);
-  }, []);
+    el.addEventListener('scroll', handleScroll, { passive: true });
+
+    return () => {
+      el.removeEventListener('wheel', onWheel);
+      el.removeEventListener('scroll', handleScroll);
+    };
+  }, [filteredEvents.length]);
 
   return (
     <div
@@ -57,7 +112,7 @@ export default function EventsGrid({ events = [] }) {
     >
       
       {/* Section Header with date prominence */}
-      <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-8 gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-6 gap-4">
         <div>
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-zinc-900 border border-white/10 mb-2">
             <Calendar className="w-3.5 h-3.5 text-emerald-400" />
@@ -124,6 +179,99 @@ export default function EventsGrid({ events = [] }) {
           </div>
         </div>
       </div>
+
+      {/* TIMELINE ANIMATION: Upper part of event section showing timeline order from recent/upcoming ahead */}
+      {filteredEvents.length > 0 && (
+        <div className="mb-6 relative">
+          <div className="flex items-center justify-between text-xs font-mono text-zinc-400 mb-2.5 px-1">
+            <div className="flex items-center gap-2">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
+              </span>
+              <span className="text-zinc-200 font-semibold tracking-wider uppercase text-[11px] sm:text-xs">
+                Event Chronology Timeline
+              </span>
+            </div>
+            <span className="text-[10px] sm:text-[11px] text-zinc-500 font-mono">
+              TIMELINE ORDER // RECENT & UPCOMING FIRST
+            </span>
+          </div>
+
+          {/* Interactive timeline bar container */}
+          <div className="relative p-3.5 sm:p-4 rounded-2xl bg-zinc-950/70 border border-white/10 backdrop-blur-md overflow-x-auto no-scrollbar">
+            {/* Animated Laser Pulse / Scan Line */}
+            <div className="absolute top-[38px] sm:top-[42px] left-6 right-6 h-[2px] bg-zinc-800/80 pointer-events-none overflow-hidden">
+              <div className="h-full bg-gradient-to-r from-transparent via-emerald-400 to-transparent timeline-beam-pulse opacity-80" />
+            </div>
+
+            {/* Timeline event nodes */}
+            <div className="relative flex items-center justify-between min-w-[540px] sm:min-w-0 gap-3 sm:gap-6 z-10 px-1">
+              {filteredEvents.map((ev, idx) => {
+                const isUpcoming = ev.status?.toLowerCase() === 'upcoming';
+                const isCurrent = activeEventIndex === idx;
+
+                return (
+                  <button
+                    key={ev.id}
+                    type="button"
+                    onClick={() => scrollToEvent(idx)}
+                    className="group flex-1 flex flex-col items-center text-center transition-all focus:outline-none cursor-pointer"
+                    title={`View ${ev.title} on timeline`}
+                  >
+                    {/* Event Date */}
+                    <span className={`font-mono text-[10px] sm:text-[11px] tracking-wider mb-1.5 transition-colors ${
+                      isUpcoming
+                        ? 'text-emerald-400 font-bold'
+                        : isCurrent
+                        ? 'text-zinc-200 font-medium'
+                        : 'text-zinc-400 group-hover:text-zinc-200'
+                    }`}>
+                      {ev.date}
+                    </span>
+
+                    {/* Timeline Node Point */}
+                    <div className="relative flex items-center justify-center my-0.5">
+                      {isUpcoming && (
+                        <span className="absolute -inset-1.5 rounded-full bg-emerald-500/30 animate-pulse pointer-events-none" />
+                      )}
+                      <div className={`w-4 h-4 rounded-full border-2 transition-all flex items-center justify-center ${
+                        isUpcoming
+                          ? 'bg-emerald-500 border-emerald-300 shadow-[0_0_12px_rgba(0,255,136,0.8)] scale-110'
+                          : isCurrent
+                          ? 'bg-emerald-400 border-white shadow-[0_0_8px_rgba(0,255,136,0.5)] scale-105'
+                          : 'bg-zinc-900 border-zinc-600 group-hover:border-emerald-400 group-hover:bg-zinc-800'
+                      }`}>
+                        <div className={`w-1.5 h-1.5 rounded-full ${
+                          isUpcoming || isCurrent ? 'bg-black' : 'bg-zinc-500 group-hover:bg-emerald-400'
+                        }`} />
+                      </div>
+                    </div>
+
+                    {/* Title */}
+                    <span className={`font-display font-semibold text-xs mt-2 truncate max-w-[125px] sm:max-w-[150px] transition-colors ${
+                      isUpcoming ? 'text-white' : isCurrent ? 'text-emerald-400' : 'text-zinc-300 group-hover:text-emerald-400'
+                    }`}>
+                      {ev.title}
+                    </span>
+
+                    {/* Category / Status Pill */}
+                    <span className={`font-mono text-[9px] uppercase px-1.5 py-0.5 rounded mt-1 border transition-colors ${
+                      isUpcoming
+                        ? 'bg-emerald-950/80 text-emerald-400 border-emerald-500/40'
+                        : isCurrent
+                        ? 'bg-zinc-900 text-emerald-400 border-emerald-500/30'
+                        : 'bg-zinc-900 text-zinc-400 border-white/5 group-hover:border-white/20'
+                    }`}>
+                      {isUpcoming ? 'UPCOMING' : ev.badge || 'COMPLETED'}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* SINGLE HORIZONTAL ROW WHICH SCROLLS WITH SNAP */}
       <div

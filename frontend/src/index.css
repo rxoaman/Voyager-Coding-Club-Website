@@ -180,3 +180,21 @@
   background-color: #E5E7EB;
   height: 100%;
 }
+
+/* Timeline animated laser scan beam */
+@keyframes timelineBeam {
+  0% {
+    transform: translateX(-150%);
+  }
+  50% {
+    transform: translateX(150%);
+  }
+  100% {
+    transform: translateX(350%);
+  }
+}
+
+.timeline-beam-pulse {
+  width: 35%;
+  animation: timelineBeam 3.5s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}

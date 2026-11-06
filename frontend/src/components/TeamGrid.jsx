@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef, useState, useEffect, useCallback } from 'react';
 import { ChevronLeft, ChevronRight, Users, Search, ArrowRight, ArrowLeft } from 'lucide-react';
 import IdCard from './IdCard';
 
@@ -9,7 +9,7 @@ export default function TeamGrid({ members = [], subTeams = [] }) {
   const trackRef = useRef(null);
   const boxRef = useRef(null);
 
-  // The 4 core leadership teams strictly ordered (organizing juniors removed)
+  // The 4 core leadership teams strictly ordered
   const coreTeamIds = ['technical', 'management', 'social-media', 'design'];
   const orderedTeams = coreTeamIds
     .map(id => subTeams.find(t => t.id === id))
@@ -30,67 +30,96 @@ export default function TeamGrid({ members = [], subTeams = [] }) {
     );
   }
 
-  // Handle wheel-driven horizontal scroll and team switching with conscious threshold buffer
-  useEffect(() => {
-    const boxEl = boxRef.current;
+  // Updates seen/loading progress line to 100% on PC/wider screens and when scrolled
+  const updateScrollProgress = useCallback(() => {
     const trackEl = trackRef.current;
     if (!trackEl) return;
 
-    const handleScroll = () => {
-      const maxScroll = trackEl.scrollWidth - trackEl.clientWidth;
-      if (maxScroll > 0) {
-        setScrollProgress(Math.min(Math.max(trackEl.scrollLeft / maxScroll, 0), 1));
+    const maxScroll = trackEl.scrollWidth - trackEl.clientWidth;
+    if (maxScroll <= 4) {
+      // All cards fit comfortably in view (wide screen / small team) -> 100% seen
+      setScrollProgress(1);
+    } else {
+      const current = trackEl.scrollLeft;
+      if (current >= maxScroll - 6) {
+        setScrollProgress(1);
       } else {
-        setScrollProgress(0);
+        setScrollProgress(Math.min(Math.max(current / maxScroll, 0), 1));
       }
-    };
+    }
+  }, []);
+
+  // Handle wheel-driven horizontal scroll and team switching with Touchpad calibration
+  useEffect(() => {
+    const trackEl = trackRef.current;
+    if (!trackEl) return;
+
+    updateScrollProgress();
 
     let isSwitching = false;
     let edgeAccumulator = 0;
     let lastSwitchTime = 0;
-    const JITTER_THRESHOLD = 24; // Increased threshold: ignores micro-scroll jitter (< 24px)
-    const EDGE_SWITCH_THRESHOLD = 180; // Increased threshold: must intentionally scroll 180px past edge to switch team
-    const SWITCH_COOLDOWN = 650; // Increased cooldown: 650ms between team switches
+    const EDGE_SWITCH_THRESHOLD = 140;
+    const SWITCH_COOLDOWN = 600;
 
     const onWheel = (e) => {
-      // Ignore horizontal or micro-jitter scrolls
-      if (Math.abs(e.deltaY) <= Math.abs(e.deltaX) || Math.abs(e.deltaY) < JITTER_THRESHOLD) {
+      // Allow native horizontal swipe gestures from touchpad
+      if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) {
         return;
       }
+
+      // Ignore trivial noise
+      if (Math.abs(e.deltaY) < 3) return;
 
       const isScrollingDown = e.deltaY > 0;
       const isScrollingUp = e.deltaY < 0;
 
       const maxScrollLeft = trackEl.scrollWidth - trackEl.clientWidth;
-      const atRightEnd = Math.ceil(trackEl.scrollLeft) >= maxScrollLeft - 10;
-      const atLeftEnd = trackEl.scrollLeft <= 10;
+      const atRightEnd = maxScrollLeft <= 4 || Math.ceil(trackEl.scrollLeft) >= maxScrollLeft - 6;
+      const atLeftEnd = trackEl.scrollLeft <= 6;
 
-      // 1. Horizontal scroll within current team's cards
+      // Touchpad detection: continuous sub-integer/pixel delta
+      const isTouchpad = e.deltaMode === 0 && Math.abs(e.deltaY) < 65;
+
+      // 1. Horizontal scroll within current team cards
       if (isScrollingDown && !atRightEnd) {
         e.preventDefault();
         edgeAccumulator = 0;
-        trackEl.scrollBy({ left: e.deltaY * 1.3, behavior: 'smooth' });
+        if (isTouchpad) {
+          trackEl.scrollLeft += e.deltaY;
+        } else {
+          trackEl.scrollBy({ left: e.deltaY * 1.2, behavior: 'smooth' });
+        }
         return;
       }
 
       if (isScrollingUp && !atLeftEnd) {
         e.preventDefault();
         edgeAccumulator = 0;
-        trackEl.scrollBy({ left: e.deltaY * 1.3, behavior: 'smooth' });
+        if (isTouchpad) {
+          trackEl.scrollLeft += e.deltaY;
+        } else {
+          trackEl.scrollBy({ left: e.deltaY * 1.2, behavior: 'smooth' });
+        }
         return;
       }
 
-      // 2. At right edge -> deliberate scroll threshold needed to switch to NEXT team
-      if (isScrollingDown && atRightEnd && activeTeamIndex < orderedTeams.length - 1) {
+      // 2. At right edge:
+      // If at the last team (Design Team), do NOT preventDefault -> let user scroll to Footer!
+      if (isScrollingDown && atRightEnd) {
+        if (activeTeamIndex >= orderedTeams.length - 1) {
+          // Release scroll lock: allow natural page scroll into footer
+          return;
+        }
+
+        // Between teams: intentional scroll switches to next team
         const now = Date.now();
         if (now - lastSwitchTime < SWITCH_COOLDOWN) {
-          e.preventDefault();
           return;
         }
 
         edgeAccumulator += e.deltaY;
         if (edgeAccumulator >= EDGE_SWITCH_THRESHOLD && !isSwitching) {
-          e.preventDefault();
           isSwitching = true;
           lastSwitchTime = now;
           edgeAccumulator = 0;
@@ -99,23 +128,25 @@ export default function TeamGrid({ members = [], subTeams = [] }) {
             if (trackEl) trackEl.scrollLeft = 0;
             isSwitching = false;
           }, 80);
-        } else {
-          e.preventDefault(); // absorb momentum until threshold is reached
         }
         return;
       }
 
-      // 3. At left edge -> deliberate scroll threshold needed to switch to PREVIOUS team
-      if (isScrollingUp && atLeftEnd && activeTeamIndex > 0) {
-        const now = Date.now();
-        if (now - lastSwitchTime < SWITCH_COOLDOWN) {
-          e.preventDefault();
+      // 3. At left edge:
+      // If at the first team (Technical Team), do NOT preventDefault -> let user scroll to Events!
+      if (isScrollingUp && atLeftEnd) {
+        if (activeTeamIndex === 0) {
+          // Release scroll lock: allow natural page scroll back up
           return;
         }
 
-        edgeAccumulator += e.deltaY; // negative
+        const now = Date.now();
+        if (now - lastSwitchTime < SWITCH_COOLDOWN) {
+          return;
+        }
+
+        edgeAccumulator += e.deltaY;
         if (edgeAccumulator <= -EDGE_SWITCH_THRESHOLD && !isSwitching) {
-          e.preventDefault();
           isSwitching = true;
           lastSwitchTime = now;
           edgeAccumulator = 0;
@@ -124,32 +155,33 @@ export default function TeamGrid({ members = [], subTeams = [] }) {
             if (trackEl) trackEl.scrollLeft = trackEl.scrollWidth;
             isSwitching = false;
           }, 80);
-        } else {
-          e.preventDefault(); // absorb momentum until threshold is reached
         }
         return;
       }
 
-      // 4. At absolute boundaries (start of technical or end of design):
-      // Allow natural page scroll (do not preventDefault)
       edgeAccumulator = 0;
     };
 
-    const targetForWheel = trackEl;
-    targetForWheel.addEventListener('wheel', onWheel, { passive: false });
-    trackEl.addEventListener('scroll', handleScroll, { passive: true });
+    trackEl.addEventListener('wheel', onWheel, { passive: false });
+    trackEl.addEventListener('scroll', updateScrollProgress, { passive: true });
+    window.addEventListener('resize', updateScrollProgress, { passive: true });
+
+    const rafId = requestAnimationFrame(updateScrollProgress);
 
     return () => {
-      targetForWheel.removeEventListener('wheel', onWheel);
-      trackEl.removeEventListener('scroll', handleScroll);
+      cancelAnimationFrame(rafId);
+      trackEl.removeEventListener('wheel', onWheel);
+      trackEl.removeEventListener('scroll', updateScrollProgress);
+      window.removeEventListener('resize', updateScrollProgress);
     };
-  }, [activeTeamIndex, orderedTeams.length]);
+  }, [activeTeamIndex, orderedTeams.length, updateScrollProgress]);
 
   const handleTeamChange = (index) => {
     setActiveTeamIndex(index);
     if (trackRef.current) {
       trackRef.current.scrollLeft = 0;
     }
+    requestAnimationFrame(updateScrollProgress);
   };
 
   const scrollRow = (direction) => {
@@ -273,11 +305,11 @@ export default function TeamGrid({ members = [], subTeams = [] }) {
           </div>
         </div>
 
-        {/* Horizontal Track of ID Badges with Snap - Displaying LARGER ID Cards */}
+        {/* Horizontal Track of ID Badges with Snap - Left margin on PC so leftmost card is not clipped */}
         {currentMembers.length > 0 ? (
           <div
             ref={trackRef}
-            className="flex gap-6 overflow-x-auto py-3 px-1 no-scrollbar scroll-smooth snap-x snap-mandatory"
+            className="flex gap-6 overflow-x-auto py-3 px-2 sm:px-6 md:px-8 no-scrollbar scroll-smooth snap-x snap-mandatory scroll-pl-2 sm:scroll-pl-6 md:scroll-pl-8"
           >
             {currentMembers.map((member) => (
               <IdCard key={member.id} member={member} />
@@ -289,13 +321,15 @@ export default function TeamGrid({ members = [], subTeams = [] }) {
           </div>
         )}
 
-        {/* Bottom Progress Bar & Team Navigation within the Single Div */}
+        {/* Bottom Seen/Progress Bar & Team Navigation: reaches 100% on PC and when seen */}
         <div className="mt-4 pt-3.5 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-3">
           {/* Progress bar */}
           <div className="w-full sm:w-72 h-1.5 bg-zinc-900 rounded-full overflow-hidden">
             <div
               className="h-full bg-emerald-500 rounded-full transition-all duration-150"
-              style={{ width: `${Math.max(scrollProgress * 100, 20)}%` }}
+              style={{
+                width: `${scrollProgress >= 0.98 ? 100 : Math.max(Math.round(scrollProgress * 100), 15)}%`
+              }}
             />
           </div>
 

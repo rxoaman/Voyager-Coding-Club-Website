@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Menu, X, Linkedin, ExternalLink } from 'lucide-react';
+import { Linkedin, ExternalLink } from 'lucide-react';
 
 export default function Navbar({ navLogoTargetRef }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -43,7 +43,7 @@ export default function Navbar({ navLogoTargetRef }) {
           : 'bg-black/30 backdrop-blur-sm border-b border-transparent'
       }`}
     >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-18 sm:h-20 flex items-center justify-between">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 sm:py-4 min-h-[4.25rem] sm:min-h-[5rem] flex items-center justify-between">
         
         {/* Left: Brand & Clean Unboxed Voyager Logo */}
         <div className="flex items-center gap-3">
@@ -112,13 +112,24 @@ export default function Navbar({ navLogoTargetRef }) {
           </a>
         </div>
 
-        {/* Mobile menu toggle button */}
+        {/* Mobile 2-line menu toggle button with smooth morph animation into cross */}
         <button
+          type="button"
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          className="md:hidden p-2 rounded-lg bg-zinc-900 border border-white/10 text-zinc-300 hover:text-white"
-          aria-label="Toggle navigation menu"
+          className="md:hidden relative w-10 h-10 rounded-lg bg-zinc-900 border border-white/10 text-zinc-300 hover:text-white flex flex-col items-center justify-center gap-1.5 focus:outline-none focus:ring-1 focus:ring-emerald-500/50 transition-colors"
+          aria-label={mobileMenuOpen ? "Close navigation menu" : "Open navigation menu"}
+          aria-expanded={mobileMenuOpen}
         >
-          {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+          <span
+            className={`w-5 h-0.5 bg-current rounded-full transition-all duration-300 ease-in-out ${
+              mobileMenuOpen ? "rotate-45 translate-y-[4px]" : "rotate-0 translate-y-0"
+            }`}
+          />
+          <span
+            className={`w-5 h-0.5 bg-current rounded-full transition-all duration-300 ease-in-out ${
+              mobileMenuOpen ? "-rotate-45 -translate-y-[4px]" : "rotate-0 translate-y-0"
+            }`}
+          />
         </button>
       </div>
 
