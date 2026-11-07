@@ -11,7 +11,7 @@
   body {
     background-color: #000000;
     color: #F3F4F6;
-    overflow-x: hidden;
+    overflow-x: clip;
   }
 
   /* Subtle minimal scrollbar */

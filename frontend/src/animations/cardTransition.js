@@ -1,4 +1,4 @@
-import anime from 'animejs';
+import { animate, createTimeline, stagger } from 'animejs';
 
 /**
  * Animate the person's cutout portrait stepping out of the card,
@@ -6,31 +6,28 @@ import anime from 'animejs';
  */
 export function animateDetailEnter({ heroImageRef, detailPanelRef, onComplete }) {
   try {
-    const timeline = anime.timeline({
-      easing: 'easeOutCubic',
-      complete: onComplete
+    const timeline = createTimeline({
+      ease: 'outCubic',
+      onComplete: onComplete,
     });
 
     if (heroImageRef) {
-      // The person's cutout photo rises and scales forward with a 3D pop effect
-      timeline.add({
-        targets: heroImageRef,
+      timeline.add(heroImageRef, {
         scale: [0.85, 1],
         opacity: [0, 1],
         translateY: [40, 0],
-        duration: 700
+        duration: 700,
       }, 0);
     }
 
     if (detailPanelRef && typeof detailPanelRef.querySelectorAll === 'function') {
       const items = detailPanelRef.querySelectorAll('.animate-item');
       if (items && items.length > 0) {
-        timeline.add({
-          targets: items,
+        timeline.add(items, {
           translateX: [35, 0],
           opacity: [0, 1],
           duration: 550,
-          delay: anime.stagger(50)
+          delay: stagger(50),
         }, 120);
       }
     }
@@ -52,14 +49,13 @@ export function animateDetailExit({ containerRef, onComplete }) {
   }
 
   try {
-    anime({
-      targets: containerRef,
+    animate(containerRef, {
       opacity: [1, 0],
       scale: [1, 0.96],
       translateY: [0, 20],
       duration: 280,
-      easing: 'easeInCubic',
-      complete: onComplete
+      ease: 'inCubic',
+      onComplete: onComplete,
     });
   } catch (err) {
     console.warn('Card transition exit error:', err);

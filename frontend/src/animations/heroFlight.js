@@ -1,5 +1,3 @@
-import anime from 'animejs';
-
 /**
  * Scroll-linked flight animation of the large hero Voyager emblem
  * into the fixed navbar target container on the top-left.

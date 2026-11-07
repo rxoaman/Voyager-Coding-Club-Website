@@ -47,17 +47,11 @@ export default function Home({ navLogoTargetRef }) {
       {/* Hero with Logo on Left and Info on Right + Flight Animation */}
       <HeroScroll navLogoTargetRef={navLogoTargetRef} />
 
-      {/* SINGLE UNIFIED SECTION: Club Events and Team Members together */}
-      <div
-        id="club-portal"
-        className="max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 space-y-8 sm:space-y-12 relative z-10"
-      >
-        {/* Flagship Events Section with clean snap-in */}
-        <EventsGrid events={events} />
+      {/* Flagship Events Section with Anime.js v4 Pinned Horizontal Scroll */}
+      <EventsGrid events={events} />
 
-        {/* Team Section with clean snap-in where the entire section fits in view */}
-        <TeamGrid members={teamData.members} subTeams={teamData.subTeams} />
-      </div>
+      {/* Team Section with Anime.js v4 Pinned Horizontal Scroll */}
+      <TeamGrid members={teamData.members} subTeams={teamData.subTeams} />
     </div>
   );
 }
