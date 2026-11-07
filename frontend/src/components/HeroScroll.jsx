@@ -23,7 +23,7 @@ export default function HeroScroll({ navLogoTargetRef }) {
   return (
     <section
       ref={heroSectionRef}
-      className="relative min-h-[90vh] sm:min-h-screen flex items-center justify-center pt-24 pb-16 px-4 sm:px-6 lg:px-8 canvas-grid snap-start"
+      className="relative min-h-0 sm:min-h-screen flex items-center justify-center pt-20 sm:pt-24 pb-6 sm:pb-16 px-4 sm:px-6 lg:px-8 canvas-grid"
     >
       <div className="max-w-7xl w-full mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center relative z-10">
         
@@ -114,8 +114,8 @@ export default function HeroScroll({ navLogoTargetRef }) {
 
       </div>
 
-      {/* Scroll indicator prompt */}
-      <div className="absolute bottom-5 left-1/2 -translate-x-1/2 flex items-center gap-2 text-zinc-500 text-xs font-mono select-none">
+      {/* Scroll indicator prompt - hidden on mobile to prevent dead vertical void */}
+      <div className="hidden sm:flex absolute bottom-5 left-1/2 -translate-x-1/2 items-center gap-2 text-zinc-500 text-xs font-mono select-none pointer-events-none">
         <span>Scroll to explore</span>
         <ArrowDown className="w-3.5 h-3.5 text-emerald-400 animate-bounce" />
       </div>

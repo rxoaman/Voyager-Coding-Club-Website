@@ -1,4 +1,5 @@
 import React, { useRef, useState, useEffect, useCallback } from 'react';
+import anime from 'animejs';
 import { ChevronLeft, ChevronRight, Users, Search, ArrowRight, ArrowLeft } from 'lucide-react';
 import IdCard from './IdCard';
 
@@ -80,8 +81,17 @@ export default function TeamGrid({ members = [], subTeams = [] }) {
         edgeAccumulator = 0;
         if (isTouchpad) {
           trackEl.scrollLeft += primaryDelta;
+          updateScrollProgress();
         } else {
-          trackEl.scrollBy({ left: primaryDelta * 1.2, behavior: 'smooth' });
+          const target = Math.max(0, Math.min(trackEl.scrollLeft + primaryDelta * 1.5, maxScrollLeft));
+          if (animeTeamRef.current) animeTeamRef.current.pause();
+          animeTeamRef.current = anime({
+            targets: trackEl,
+            scrollLeft: target,
+            duration: 350,
+            easing: 'easeOutQuad',
+            update: updateScrollProgress,
+          });
         }
         return;
       }
@@ -91,8 +101,17 @@ export default function TeamGrid({ members = [], subTeams = [] }) {
         edgeAccumulator = 0;
         if (isTouchpad) {
           trackEl.scrollLeft += primaryDelta;
+          updateScrollProgress();
         } else {
-          trackEl.scrollBy({ left: primaryDelta * 1.2, behavior: 'smooth' });
+          const target = Math.max(0, Math.min(trackEl.scrollLeft + primaryDelta * 1.5, maxScrollLeft));
+          if (animeTeamRef.current) animeTeamRef.current.pause();
+          animeTeamRef.current = anime({
+            targets: trackEl,
+            scrollLeft: target,
+            duration: 350,
+            easing: 'easeOutQuad',
+            update: updateScrollProgress,
+          });
         }
         return;
       }
@@ -208,9 +227,25 @@ export default function TeamGrid({ members = [], subTeams = [] }) {
       }
     };
 
+    const onTouchEnd = () => {
+      const cardWidth = window.innerWidth < 640 ? 280 : 330;
+      const targetScroll = Math.round(trackEl.scrollLeft / cardWidth) * cardWidth;
+      const maxScroll = trackEl.scrollWidth - trackEl.clientWidth;
+      const bounded = Math.max(0, Math.min(targetScroll, maxScroll));
+      if (animeTeamRef.current) animeTeamRef.current.pause();
+      animeTeamRef.current = anime({
+        targets: trackEl,
+        scrollLeft: bounded,
+        duration: 350,
+        easing: 'easeOutQuad',
+        update: updateScrollProgress,
+      });
+    };
+
     trackEl.addEventListener('wheel', onWheel, { passive: false });
     trackEl.addEventListener('touchstart', onTouchStart, { passive: true });
     trackEl.addEventListener('touchmove', onTouchMove, { passive: false });
+    trackEl.addEventListener('touchend', onTouchEnd, { passive: true });
     trackEl.addEventListener('scroll', updateScrollProgress, { passive: true });
     window.addEventListener('resize', updateScrollProgress, { passive: true });
 
@@ -221,6 +256,7 @@ export default function TeamGrid({ members = [], subTeams = [] }) {
       trackEl.removeEventListener('wheel', onWheel);
       trackEl.removeEventListener('touchstart', onTouchStart);
       trackEl.removeEventListener('touchmove', onTouchMove);
+      trackEl.removeEventListener('touchend', onTouchEnd);
       trackEl.removeEventListener('scroll', updateScrollProgress);
       window.removeEventListener('resize', updateScrollProgress);
     };
@@ -234,11 +270,23 @@ export default function TeamGrid({ members = [], subTeams = [] }) {
     requestAnimationFrame(updateScrollProgress);
   };
 
+  const animeTeamRef = useRef(null);
+
   const scrollRow = (direction) => {
-    if (trackRef.current) {
-      const offset = direction === 'left' ? -310 : 310;
-      trackRef.current.scrollBy({ left: offset, behavior: 'smooth' });
-    }
+    const el = trackRef.current;
+    if (!el) return;
+    const cardWidth = window.innerWidth < 640 ? 280 : 330;
+    const offset = direction === 'left' ? -cardWidth : cardWidth;
+    const maxScroll = el.scrollWidth - el.clientWidth;
+    const target = Math.max(0, Math.min(el.scrollLeft + offset, maxScroll));
+    if (animeTeamRef.current) animeTeamRef.current.pause();
+    animeTeamRef.current = anime({
+      targets: el,
+      scrollLeft: target,
+      duration: 400,
+      easing: 'easeOutCubic',
+      update: updateScrollProgress,
+    });
   };
 
   return (
@@ -359,7 +407,7 @@ export default function TeamGrid({ members = [], subTeams = [] }) {
         {currentMembers.length > 0 ? (
           <div
             ref={trackRef}
-            className="flex gap-4 sm:gap-6 overflow-x-auto py-3 px-1 sm:px-6 md:px-8 no-scrollbar scroll-smooth snap-x snap-mandatory scroll-pl-1 sm:scroll-pl-6 md:scroll-pl-8"
+            className="flex gap-4 sm:gap-6 overflow-x-auto py-3 px-1 sm:px-6 md:px-8 no-scrollbar scroll-pl-1 sm:scroll-pl-6 md:scroll-pl-8"
           >
             {currentMembers.map((member) => (
               <IdCard key={member.id} member={member} />

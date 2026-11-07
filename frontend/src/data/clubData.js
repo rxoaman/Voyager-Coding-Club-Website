@@ -19,7 +19,7 @@ export const EVENTS = [
     id: "13th-protocol",
     title: "13th Protocol",
     badge: "AI Hackathon",
-    status: "Upcoming",
+    status: "Live",
     date: "28 Nov 2026",
     time: "10:00 AM IST",
     location: "KCCITM",

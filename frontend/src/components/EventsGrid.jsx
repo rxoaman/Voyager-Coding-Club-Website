@@ -1,5 +1,6 @@
-import React, { useState, useMemo, useRef, useEffect } from 'react';
+import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
 import { Calendar, ChevronLeft, ChevronRight } from 'lucide-react';
+import anime from 'animejs';
 import EventCard from './EventCard';
 
 function parseEventDate(dateStr) {
@@ -11,9 +12,14 @@ function parseEventDate(dateStr) {
 export default function EventsGrid({ events = [] }) {
   const [filterStatus, setFilterStatus] = useState('all');
   const [activeEventIndex, setActiveEventIndex] = useState(0);
-  const trackRef = useRef(null);
 
-  // Timeline ordering: upcoming first (soonest upcoming first), then completed from new to old
+  const sectionRef = useRef(null);
+  const trackRef = useRef(null);
+  const timelineRef = useRef(null);
+  const animeCardRef = useRef(null);
+  const animeTimelineRef = useRef(null);
+
+  // Timeline ordering: upcoming/live first (soonest upcoming first), then completed from new to old
   const filteredEvents = useMemo(() => {
     const list = events.filter((ev) => {
       if (filterStatus === 'all') return true;
@@ -58,127 +64,207 @@ export default function EventsGrid({ events = [] }) {
     }
   }, [filterStatus, upcomingCount, completedCount]);
 
+  // Synchronize Timeline position to center the active node using anime.js
+  const syncTimelineToActive = useCallback((targetIndex) => {
+    const tEl = timelineRef.current;
+    if (!tEl) return;
+
+    const nodeBtn = tEl.querySelector(`[data-timeline-node="${targetIndex}"]`);
+    if (nodeBtn) {
+      const targetLeft = nodeBtn.offsetLeft - (tEl.clientWidth / 2) + (nodeBtn.clientWidth / 2);
+      const maxScroll = tEl.scrollWidth - tEl.clientWidth;
+      const safeLeft = Math.max(0, Math.min(targetLeft, maxScroll));
+
+      if (animeTimelineRef.current) animeTimelineRef.current.pause();
+      animeTimelineRef.current = anime({
+        targets: tEl,
+        scrollLeft: safeLeft,
+        duration: 400,
+        easing: 'easeOutCubic',
+      });
+    }
+  }, []);
+
+  // Smoothly scroll to a specific event card and automatically synchronize the timeline line
+  const scrollToEvent = useCallback((index) => {
+    const cEl = trackRef.current;
+    if (!cEl) return;
+
+    const boundedIndex = Math.max(0, Math.min(index, filteredEvents.length - 1));
+    setActiveEventIndex(boundedIndex);
+    syncTimelineToActive(boundedIndex);
+
+    const cardEl = cEl.children[boundedIndex];
+    if (cardEl) {
+      const targetLeft = cardEl.offsetLeft - cEl.offsetLeft;
+      if (animeCardRef.current) animeCardRef.current.pause();
+      animeCardRef.current = anime({
+        targets: cEl,
+        scrollLeft: targetLeft,
+        duration: 450,
+        easing: 'easeOutCubic',
+      });
+    }
+  }, [filteredEvents.length, syncTimelineToActive]);
+
   const scroll = (direction) => {
-    if (trackRef.current) {
-      const offset = direction === 'left' ? -380 : 380;
-      trackRef.current.scrollBy({ left: offset, behavior: 'smooth' });
-    }
+    const nextIndex = direction === 'left' ? activeEventIndex - 1 : activeEventIndex + 1;
+    scrollToEvent(nextIndex);
   };
 
-  const scrollToEvent = (index) => {
-    if (trackRef.current) {
-      const el = trackRef.current;
-      const cardEl = el.children[index];
-      if (cardEl) {
-        cardEl.scrollIntoView({ behavior: 'smooth', inline: 'start', block: 'nearest' });
-      } else {
-        const cardWidth = window.innerWidth < 640 ? 320 : 380;
-        el.scrollTo({ left: index * cardWidth, behavior: 'smooth' });
-      }
-      setActiveEventIndex(index);
-    }
-  };
-
-  // Geek Room style scroll & touch interaction:
-  // Both vertical and horizontal scroll/touch gestures drive horizontal sliding
+  // Geek Room style scroll interaction with Anime.js:
+  // Both vertical and horizontal scroll/touch gestures drive the cards and timeline simultaneously
   useEffect(() => {
     const el = trackRef.current;
     if (!el) return;
 
-    const handleScroll = () => {
+    let isScrollingFromAnime = false;
+
+    // Detect card index from manual scroll
+    const onScroll = () => {
+      if (isScrollingFromAnime) return;
       const cardWidth = window.innerWidth < 640 ? 320 : 380;
       const index = Math.round(el.scrollLeft / cardWidth);
-      setActiveEventIndex(Math.min(Math.max(index, 0), filteredEvents.length - 1));
+      const bounded = Math.min(Math.max(index, 0), filteredEvents.length - 1);
+      if (bounded !== activeEventIndex) {
+        setActiveEventIndex(bounded);
+        syncTimelineToActive(bounded);
+      }
     };
 
-    // 1. Wheel handling (Trackpad / Mouse wheel)
+    // 1. Wheel handling (Mouse wheel and Trackpad)
+    let wheelTimeout;
     const onWheel = (e) => {
       const maxScroll = el.scrollWidth - el.clientWidth;
       if (maxScroll <= 4) return;
 
-      // Unify primary delta from either vertical or horizontal scroll
+      // Primary delta from vertical or horizontal wheel
       const primaryDelta = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
       if (Math.abs(primaryDelta) < 3) return;
 
-      const atLeft = el.scrollLeft <= 5;
-      const atRight = Math.ceil(el.scrollLeft) >= maxScroll - 5;
+      const atLeft = el.scrollLeft <= 4;
+      const atRight = Math.ceil(el.scrollLeft) >= maxScroll - 4;
 
-      // Allow natural page scroll once boundaries are hit
+      // When reaching edges, release to standard vertical page scroll
       if ((primaryDelta > 0 && atRight) || (primaryDelta < 0 && atLeft)) {
         return;
       }
 
-      // Convert vertical/horizontal wheel scroll into horizontal track scroll
+      // Convert vertical/horizontal scroll into horizontal movement
       e.preventDefault();
-      const isTouchpad = e.deltaMode === 0 && Math.abs(primaryDelta) < 65;
-      if (isTouchpad) {
+
+      if (animeCardRef.current) animeCardRef.current.pause();
+
+      const isTrackpad = e.deltaMode === 0 && Math.abs(primaryDelta) < 60;
+      if (isTrackpad) {
         el.scrollLeft += primaryDelta;
+        const cardWidth = window.innerWidth < 640 ? 320 : 380;
+        const index = Math.min(Math.max(Math.round(el.scrollLeft / cardWidth), 0), filteredEvents.length - 1);
+        setActiveEventIndex(index);
+        syncTimelineToActive(index);
       } else {
-        el.scrollBy({ left: primaryDelta * 1.2, behavior: 'smooth' });
+        const targetScroll = Math.max(0, Math.min(el.scrollLeft + primaryDelta * 1.6, maxScroll));
+        isScrollingFromAnime = true;
+        animeCardRef.current = anime({
+          targets: el,
+          scrollLeft: targetScroll,
+          duration: 380,
+          easing: 'easeOutQuad',
+          complete: () => {
+            isScrollingFromAnime = false;
+            const cardWidth = window.innerWidth < 640 ? 320 : 380;
+            const index = Math.min(Math.max(Math.round(el.scrollLeft / cardWidth), 0), filteredEvents.length - 1);
+            setActiveEventIndex(index);
+            syncTimelineToActive(index);
+          }
+        });
       }
     };
 
-    // 2. Touch handling on smartphones (Geek Room touch scroll)
+    // 2. Touch handling on smartphones
     let touchStartX = 0;
     let touchStartY = 0;
     let startScrollLeft = 0;
+    let isTouchActive = false;
 
     const onTouchStart = (e) => {
       if (e.touches.length !== 1) return;
+      if (animeCardRef.current) animeCardRef.current.pause();
       touchStartX = e.touches[0].clientX;
       touchStartY = e.touches[0].clientY;
       startScrollLeft = el.scrollLeft;
+      isTouchActive = true;
     };
 
     const onTouchMove = (e) => {
-      if (e.touches.length !== 1) return;
+      if (!isTouchActive || e.touches.length !== 1) return;
       const maxScroll = el.scrollWidth - el.clientWidth;
       if (maxScroll <= 4) return;
 
       const curX = e.touches[0].clientX;
       const curY = e.touches[0].clientY;
-      const diffX = touchStartX - curX; // positive = dragging left -> scroll right
-      const diffY = touchStartY - curY; // positive = dragging up -> scroll right
+      const diffX = touchStartX - curX;
+      const diffY = touchStartY - curY;
 
-      // Unify vertical or horizontal touch intent (Geek Room style)
+      // Both vertical and horizontal swipe gestures drive the card carousel
       const primaryDiff = Math.abs(diffX) > Math.abs(diffY) ? diffX : diffY;
 
       const atLeft = el.scrollLeft <= 4;
       const atRight = Math.ceil(el.scrollLeft) >= maxScroll - 4;
 
-      // At boundaries, do not preventDefault -> allows finger to scroll page vertically!
+      // At boundaries, release preventDefault to allow smooth vertical page navigation
       if ((primaryDiff > 0 && atRight) || (primaryDiff < 0 && atLeft)) {
         return;
       }
 
-      // Inside track: convert vertical or horizontal touch swipe into horizontal card translation
-      if (Math.abs(primaryDiff) > 5) {
+      if (Math.abs(primaryDiff) > 6) {
         e.preventDefault();
         el.scrollLeft = startScrollLeft + primaryDiff;
+        const cardWidth = window.innerWidth < 640 ? 320 : 380;
+        const index = Math.min(Math.max(Math.round(el.scrollLeft / cardWidth), 0), filteredEvents.length - 1);
+        setActiveEventIndex(index);
+        syncTimelineToActive(index);
       }
+    };
+
+    const onTouchEnd = () => {
+      if (!isTouchActive) return;
+      isTouchActive = false;
+      // Snap to nearest card smoothly using anime.js
+      const cardWidth = window.innerWidth < 640 ? 320 : 380;
+      const targetIndex = Math.min(Math.max(Math.round(el.scrollLeft / cardWidth), 0), filteredEvents.length - 1);
+      scrollToEvent(targetIndex);
     };
 
     el.addEventListener('wheel', onWheel, { passive: false });
     el.addEventListener('touchstart', onTouchStart, { passive: true });
     el.addEventListener('touchmove', onTouchMove, { passive: false });
-    el.addEventListener('scroll', handleScroll, { passive: true });
+    el.addEventListener('touchend', onTouchEnd, { passive: true });
+    el.addEventListener('scroll', onScroll, { passive: true });
 
     return () => {
       el.removeEventListener('wheel', onWheel);
       el.removeEventListener('touchstart', onTouchStart);
       el.removeEventListener('touchmove', onTouchMove);
-      el.removeEventListener('scroll', handleScroll);
+      el.removeEventListener('touchend', onTouchEnd);
+      el.removeEventListener('scroll', onScroll);
     };
-  }, [filteredEvents.length]);
+  }, [filteredEvents.length, activeEventIndex, scrollToEvent, syncTimelineToActive]);
+
+  // Calculate timeline laser progress percentage (0 to 100%)
+  const progressPercent = useMemo(() => {
+    if (filteredEvents.length <= 1) return 100;
+    return (activeEventIndex / (filteredEvents.length - 1)) * 100;
+  }, [activeEventIndex, filteredEvents.length]);
 
   return (
     <div
       id="events"
-      className="flex flex-col pt-2 sm:pt-4 pb-6 sm:pb-8 snap-start scroll-mt-20 relative z-10"
+      ref={sectionRef}
+      className="flex flex-col pt-1 sm:pt-4 pb-6 sm:pb-8 relative z-10"
     >
-      
       {/* Section Header with date prominence */}
-      <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-5 gap-3.5">
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-4 sm:mb-5 gap-3.5">
         <div>
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-zinc-900 border border-white/10 mb-2">
             <Calendar className="w-3.5 h-3.5 text-emerald-400" />
@@ -252,7 +338,8 @@ export default function EventsGrid({ events = [] }) {
         </div>
       </div>
 
-      {/* TIMELINE ANIMATION: Upper part of event section showing timeline order from recent/upcoming ahead */}
+      {/* SYNCHRONIZED TIMELINE ANIMATION:
+          Automatically scrolls & illuminates along with the event cards on vertical or horizontal scroll */}
       {filteredEvents.length > 0 && (
         <div className="mb-6 relative">
           <div className="flex items-center justify-between text-xs font-mono text-zinc-400 mb-2.5 px-1">
@@ -266,19 +353,26 @@ export default function EventsGrid({ events = [] }) {
               </span>
             </div>
             <span className="text-[10px] sm:text-[11px] text-zinc-500 font-mono">
-              TIMELINE ORDER // RECENT & UPCOMING FIRST
+              SYNCHRONIZED // RECENT & UPCOMING FIRST
             </span>
           </div>
 
-          {/* Interactive timeline bar container */}
-          <div className="relative p-3.5 sm:p-4 rounded-2xl bg-zinc-950/70 border border-white/10 backdrop-blur-md overflow-x-auto no-scrollbar">
-            {/* Animated Laser Pulse / Scan Line */}
-            <div className="absolute top-[38px] sm:top-[42px] left-6 right-6 h-[2px] bg-zinc-800/80 pointer-events-none overflow-hidden">
-              <div className="h-full bg-gradient-to-r from-transparent via-emerald-400 to-transparent timeline-beam-pulse opacity-80" />
+          {/* Interactive timeline bar container - automatically centers active node via anime.js */}
+          <div
+            ref={timelineRef}
+            className="relative p-3.5 sm:p-4 rounded-2xl bg-zinc-950/70 border border-white/10 backdrop-blur-md overflow-x-auto no-scrollbar"
+          >
+            {/* Base timeline rail */}
+            <div className="absolute top-[38px] sm:top-[42px] left-6 right-6 h-[2px] bg-zinc-800/80 pointer-events-none rounded-full overflow-hidden">
+              {/* Anime.js synchronized progress laser bar */}
+              <div
+                className="h-full bg-gradient-to-r from-emerald-500 via-emerald-400 to-emerald-300 shadow-[0_0_10px_#00FF88] transition-all duration-400 ease-out"
+                style={{ width: `${progressPercent}%` }}
+              />
             </div>
 
             {/* Timeline event nodes */}
-            <div className="relative flex items-center justify-between min-w-[540px] sm:min-w-0 gap-3 sm:gap-6 z-10 px-1">
+            <div className="relative flex items-center justify-between min-w-[500px] sm:min-w-0 gap-3 sm:gap-6 z-10 px-1">
               {filteredEvents.map((ev, idx) => {
                 const isUpcoming = ev.status?.toLowerCase() === 'upcoming' || ev.status?.toLowerCase() === 'live';
                 const isCurrent = activeEventIndex === idx;
@@ -287,6 +381,7 @@ export default function EventsGrid({ events = [] }) {
                   <button
                     key={ev.id}
                     type="button"
+                    data-timeline-node={idx}
                     onClick={() => scrollToEvent(idx)}
                     className="group flex-1 flex flex-col items-center text-center transition-all focus:outline-none cursor-pointer"
                     title={`View ${ev.title} on timeline`}
@@ -345,16 +440,15 @@ export default function EventsGrid({ events = [] }) {
         </div>
       )}
 
-      {/* SINGLE HORIZONTAL ROW WHICH SCROLLS WITH SNAP */}
+      {/* SINGLE HORIZONTAL ROW OF EVENT CARDS */}
       <div
         ref={trackRef}
-        className="flex gap-6 overflow-x-auto py-3 px-1 no-scrollbar scroll-smooth snap-x snap-mandatory"
+        className="flex gap-6 overflow-x-auto py-3 px-1 no-scrollbar"
       >
         {filteredEvents.map((event) => (
           <EventCard key={event.id} event={event} />
         ))}
       </div>
-
     </div>
   );
 }

@@ -17,6 +17,26 @@ export function initHeroScrollAnimation({
   const updateFlight = () => {
     try {
       const scrollY = window.scrollY || window.pageYOffset || 0;
+
+      // On mobile screens (< 768px), keep hero fully visible without empty gap dissolves
+      if (window.innerWidth < 768) {
+        heroLogoRef.style.transform = 'none';
+        heroLogoRef.style.opacity = '1';
+        heroTextRef.style.opacity = '1';
+        heroTextRef.style.transform = 'none';
+        if (navLogoTargetRef) {
+          if (scrollY > 150) {
+            navLogoTargetRef.style.opacity = '1';
+            navLogoTargetRef.style.transform = 'scale(1)';
+          } else {
+            navLogoTargetRef.style.opacity = '0';
+            navLogoTargetRef.style.transform = 'scale(0.8)';
+          }
+        }
+        ticking = false;
+        return;
+      }
+
       const progress = Math.min(Math.max(scrollY / scrollThreshold, 0), 1);
 
       // Use parent container for stable, untransformed coordinates
