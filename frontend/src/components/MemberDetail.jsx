@@ -1,7 +1,11 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   ArrowLeft, 
+  ArrowRight,
+  ChevronLeft,
+  ChevronRight,
+  Users,
   Linkedin, 
   Mail, 
   Github, 
@@ -12,12 +16,54 @@ import {
 } from 'lucide-react';
 import ResilientImage from './ResilientImage';
 import { animateDetailEnter, animateDetailExit } from '../animations/cardTransition';
+import { TEAM_MEMBERS, SUB_TEAMS } from '../data/clubData';
 
 export default function MemberDetail({ member }) {
   const navigate = useNavigate();
   const heroImageRef = useRef(null);
   const detailPanelRef = useRef(null);
   const containerRef = useRef(null);
+
+  // Compute Current, Prev, and Next Team Member (cyclic navigation across 14 members)
+  const totalMembers = TEAM_MEMBERS.length;
+  const currentMemberIndex = member
+    ? TEAM_MEMBERS.findIndex(
+        (m) => m.id === member.id || m.badgeId === member.badgeId || String(m.badgeNumber) === String(member.badgeNumber)
+      )
+    : -1;
+
+  const prevMember = currentMemberIndex >= 0
+    ? TEAM_MEMBERS[(currentMemberIndex - 1 + totalMembers) % totalMembers]
+    : TEAM_MEMBERS[totalMembers - 1];
+
+  const nextMember = currentMemberIndex >= 0
+    ? TEAM_MEMBERS[(currentMemberIndex + 1) % totalMembers]
+    : TEAM_MEMBERS[0];
+
+  // Compute Current, Prev, and Next Team (cyclic navigation across 4 core teams)
+  const totalTeams = SUB_TEAMS.length;
+  const currentTeamIndex = member
+    ? SUB_TEAMS.findIndex(
+        (t) => t.id === member.subTeamId || t.name.toLowerCase() === member.subTeam?.toLowerCase()
+      )
+    : -1;
+
+  const prevTeam = currentTeamIndex >= 0
+    ? SUB_TEAMS[(currentTeamIndex - 1 + totalTeams) % totalTeams]
+    : SUB_TEAMS[totalTeams - 1];
+
+  const nextTeam = currentTeamIndex >= 0
+    ? SUB_TEAMS[(currentTeamIndex + 1) % totalTeams]
+    : SUB_TEAMS[0];
+
+  // First member / lead of prev and next team for fast team jumping
+  const prevTeamLead = TEAM_MEMBERS.find(
+    (m) => m.subTeamId === prevTeam.id || m.subTeam.toLowerCase() === prevTeam.name.toLowerCase()
+  ) || TEAM_MEMBERS[0];
+
+  const nextTeamLead = TEAM_MEMBERS.find(
+    (m) => m.subTeamId === nextTeam.id || m.subTeam.toLowerCase() === nextTeam.name.toLowerCase()
+  ) || TEAM_MEMBERS[0];
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -26,7 +72,7 @@ export default function MemberDetail({ member }) {
       heroImageRef: heroImageRef.current,
       detailPanelRef: detailPanelRef.current
     });
-  }, [member]);
+  }, [member?.id]);
 
   const handleBack = () => {
     animateDetailExit({
@@ -36,6 +82,33 @@ export default function MemberDetail({ member }) {
       }
     });
   };
+
+  const goToMember = useCallback((targetMember) => {
+    if (!targetMember) return;
+    navigate(`/team/${targetMember.id}`);
+  }, [navigate]);
+
+  const goToTeam = useCallback((targetLead) => {
+    if (!targetLead) return;
+    navigate(`/team/${targetLead.id}`);
+  }, [navigate]);
+
+  // Keyboard navigation: ArrowLeft (prev member), ArrowRight (next member), Escape (back)
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+      if (e.key === 'ArrowLeft') {
+        goToMember(prevMember);
+      } else if (e.key === 'ArrowRight') {
+        goToMember(nextMember);
+      } else if (e.key === 'Escape') {
+        handleBack();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [prevMember, nextMember, goToMember]);
 
   if (!member) {
     return (
@@ -61,17 +134,76 @@ export default function MemberDetail({ member }) {
   return (
     <div
       ref={containerRef}
-      className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-20 relative z-10"
+      className="member-detail-container max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-20 relative z-10 select-none"
     >
-      {/* Back Button with Liquid Glass styling */}
-      <div className="mb-8">
+      {/* Top Navigation Bar: Back to Team + Team Switcher + Member Switcher */}
+      <div className="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-white/10">
+        
+        {/* Left: Back to Team Directory */}
         <button
           onClick={handleBack}
-          className="group inline-flex items-center gap-2 px-4 py-2 rounded-xl liquid-glass-button text-zinc-200 hover:text-white font-mono text-xs select-none"
+          className="group inline-flex items-center gap-2 px-4 py-2 rounded-xl liquid-glass-button text-zinc-200 hover:text-white font-mono text-xs select-none w-fit"
         >
           <ArrowLeft className="w-3.5 h-3.5 text-emerald-400 group-hover:-translate-x-1 transition-transform" />
           <span>Back to team directory</span>
         </button>
+
+        {/* Right: Quick Switch Controls for Team & Member */}
+        <div className="flex flex-wrap items-center gap-3">
+          
+          {/* Team Switcher Controls */}
+          <div className="inline-flex items-center gap-1 bg-zinc-950/80 p-1 rounded-xl border border-white/10 font-mono text-xs">
+            <button
+              onClick={() => goToTeam(prevTeamLead)}
+              title={`Switch to ${prevTeam.name}`}
+              className="px-2.5 py-1 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800 transition-colors flex items-center gap-1 cursor-pointer"
+            >
+              <ChevronLeft className="w-3.5 h-3.5 text-emerald-400" />
+              <span className="hidden sm:inline">{prevTeam.name.replace(' Team', '')}</span>
+              <span className="sm:hidden">Prev Team</span>
+            </button>
+
+            <span className="px-2 py-0.5 rounded-md bg-emerald-950/80 text-emerald-400 font-bold border border-emerald-500/30 text-[11px]">
+              {member.subTeam}
+            </span>
+
+            <button
+              onClick={() => goToTeam(nextTeamLead)}
+              title={`Switch to ${nextTeam.name}`}
+              className="px-2.5 py-1 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800 transition-colors flex items-center gap-1 cursor-pointer"
+            >
+              <span className="hidden sm:inline">{nextTeam.name.replace(' Team', '')}</span>
+              <span className="sm:hidden">Next Team</span>
+              <ChevronRight className="w-3.5 h-3.5 text-emerald-400" />
+            </button>
+          </div>
+
+          {/* Member Switcher Controls */}
+          <div className="inline-flex items-center gap-1 bg-zinc-950/80 p-1 rounded-xl border border-white/10 font-mono text-xs">
+            <button
+              onClick={() => goToMember(prevMember)}
+              title={`Previous Member: ${prevMember.name}`}
+              className="p-1.5 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800 transition-colors cursor-pointer"
+              aria-label="Previous Team Member"
+            >
+              <ChevronLeft className="w-4 h-4 text-emerald-400" />
+            </button>
+
+            <span className="px-2 font-mono text-xs text-zinc-400 whitespace-nowrap">
+              {currentMemberIndex >= 0 ? `${currentMemberIndex + 1} / ${totalMembers}` : 'MEMBER'}
+            </span>
+
+            <button
+              onClick={() => goToMember(nextMember)}
+              title={`Next Member: ${nextMember.name}`}
+              className="p-1.5 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800 transition-colors cursor-pointer"
+              aria-label="Next Team Member"
+            >
+              <ChevronRight className="w-4 h-4 text-emerald-400" />
+            </button>
+          </div>
+
+        </div>
       </div>
 
       {/* Main Layout */}
@@ -220,6 +352,82 @@ export default function MemberDetail({ member }) {
           </div>
 
         </div>
+
+      </div>
+
+      {/* BOTTOM QUICK-NAVIGATION DOCK: Full Prev / Next Member Cards & Team Switcher */}
+      <div className="mt-12 liquid-glass rounded-3xl p-5 sm:p-7 border border-white/10 shadow-2xl flex flex-col md:flex-row items-center justify-between gap-5">
+        
+        {/* Previous Member Card */}
+        <button
+          type="button"
+          onClick={() => goToMember(prevMember)}
+          className="group w-full md:w-5/12 flex items-center gap-3.5 p-3 sm:p-4 rounded-2xl bg-black/40 hover:bg-zinc-900 border border-white/10 hover:border-emerald-500/40 transition-all text-left cursor-pointer"
+        >
+          <div className="w-9 h-9 rounded-xl bg-zinc-900 border border-white/10 flex items-center justify-center text-emerald-400 group-hover:-translate-x-1 transition-transform shrink-0">
+            <ChevronLeft className="w-5 h-5" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <div className="font-mono text-[10px] uppercase text-zinc-500 tracking-wider">
+              Previous Member
+            </div>
+            <div className="font-display font-bold text-sm sm:text-base text-white group-hover:text-emerald-400 transition-colors truncate">
+              {prevMember.name}
+            </div>
+            <div className="font-mono text-xs text-zinc-400 truncate">
+              {prevMember.designation || prevMember.title} • <span className="text-emerald-400/80">{prevMember.subTeam}</span>
+            </div>
+          </div>
+        </button>
+
+        {/* Center Team Jump Bar */}
+        <div className="flex flex-col items-center gap-2 shrink-0">
+          <span className="font-mono text-[10px] uppercase tracking-widest text-zinc-500 font-semibold">
+            Change Team
+          </span>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => goToTeam(prevTeamLead)}
+              className="px-3 py-1.5 rounded-lg liquid-glass-button text-xs font-mono text-zinc-300 hover:text-white flex items-center gap-1.5 cursor-pointer"
+              title={`Jump to ${prevTeam.name}`}
+            >
+              <ArrowLeft className="w-3.5 h-3.5 text-emerald-400" />
+              <span>{prevTeam.name.replace(' Team', '')}</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => goToTeam(nextTeamLead)}
+              className="px-3 py-1.5 rounded-lg liquid-glass-button text-xs font-mono text-zinc-300 hover:text-white flex items-center gap-1.5 cursor-pointer"
+              title={`Jump to ${nextTeam.name}`}
+            >
+              <span>{nextTeam.name.replace(' Team', '')}</span>
+              <ArrowRight className="w-3.5 h-3.5 text-emerald-400" />
+            </button>
+          </div>
+        </div>
+
+        {/* Next Member Card */}
+        <button
+          type="button"
+          onClick={() => goToMember(nextMember)}
+          className="group w-full md:w-5/12 flex items-center justify-between gap-3.5 p-3 sm:p-4 rounded-2xl bg-black/40 hover:bg-zinc-900 border border-white/10 hover:border-emerald-500/40 transition-all text-right cursor-pointer"
+        >
+          <div className="min-w-0 flex-1">
+            <div className="font-mono text-[10px] uppercase text-zinc-500 tracking-wider">
+              Next Member
+            </div>
+            <div className="font-display font-bold text-sm sm:text-base text-white group-hover:text-emerald-400 transition-colors truncate">
+              {nextMember.name}
+            </div>
+            <div className="font-mono text-xs text-zinc-400 truncate">
+              {nextMember.designation || nextMember.title} • <span className="text-emerald-400/80">{nextMember.subTeam}</span>
+            </div>
+          </div>
+          <div className="w-9 h-9 rounded-xl bg-zinc-900 border border-white/10 flex items-center justify-center text-emerald-400 group-hover:translate-x-1 transition-transform shrink-0">
+            <ChevronRight className="w-5 h-5" />
+          </div>
+        </button>
 
       </div>
     </div>

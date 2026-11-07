@@ -128,43 +128,31 @@
   position: relative;
 }
 
+/* Compact Lanyard Clip - sits flush at top of card without projecting upward into header text */
 .lanyard-clip {
-  position: absolute;
-  top: -14px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 22px;
-  height: 18px;
+  width: 20px;
+  height: 10px;
   background: linear-gradient(180deg, #9CA3AF 0%, #4B5563 100%);
   border-radius: 3px 3px 1px 1px;
-  z-index: 10;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.6);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.6);
+  position: relative;
+  z-index: 20;
 }
 
 .lanyard-clip::before {
   content: '';
   position: absolute;
-  top: 3px;
+  top: 2px;
   left: 50%;
   transform: translateX(-50%);
-  width: 10px;
-  height: 3px;
+  width: 8px;
+  height: 2px;
   background: #111827;
   border-radius: 1px;
 }
 
 .lanyard-strap {
-  position: absolute;
-  top: -38px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 16px;
-  height: 26px;
-  background: #0B111E;
-  border-left: 2px solid #10B981;
-  border-right: 2px solid #10B981;
-  border-radius: 1px;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.7);
+  display: none !important;
 }
 
 /* Barcode simulation styling */
@@ -253,4 +241,11 @@
   html {
     scroll-snap-type: none !important;
   }
+}
+
+/* Disable any scroll snapping on member detail view */
+.member-detail-container,
+.member-detail-container * {
+  scroll-snap-type: none !important;
+  scroll-snap-align: none !important;
 }

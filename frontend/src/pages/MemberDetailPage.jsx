@@ -10,7 +10,26 @@ export default function MemberDetailPage() {
   const [member, setMember] = useState(() => getTeamMemberById(id));
   const [loading, setLoading] = useState(false);
 
+  // Disable any scroll-snapping on the member detail view
   useEffect(() => {
+    const prevSnapHtml = document.documentElement.style.scrollSnapType;
+    const prevSnapBody = document.body.style.scrollSnapType;
+    document.documentElement.style.scrollSnapType = 'none';
+    document.body.style.scrollSnapType = 'none';
+
+    return () => {
+      document.documentElement.style.scrollSnapType = prevSnapHtml;
+      document.body.style.scrollSnapType = prevSnapBody;
+    };
+  }, []);
+
+  // Update immediately when route ID changes
+  useEffect(() => {
+    const localMember = getTeamMemberById(id);
+    if (localMember) {
+      setMember(localMember);
+    }
+
     let isMounted = true;
 
     async function loadMember() {
@@ -24,7 +43,7 @@ export default function MemberDetailPage() {
       }
     }
 
-    if (!member) {
+    if (!localMember) {
       setLoading(true);
       loadMember().finally(() => {
         if (isMounted) setLoading(false);

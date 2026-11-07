@@ -94,18 +94,25 @@ export default function EventsGrid({ events = [] }) {
       autoplay: false,
     });
 
-    // 2. Anime.js v4 onScroll observer with sync damping
+    // Exit threshold (runway hold) so the pinned section does not snap/move away easily
+    const EXIT_THRESHOLD = 500;
+    const totalDistance = travelDistance + EXIT_THRESHOLD;
+    const transRatio = travelDistance / totalDistance;
+
+    // 2. Anime.js v4 onScroll observer with sync damping & exit hold threshold
     const scrollObserver = onScroll({
       target: sectionRef.current,
       sync: 0.18, // Smooth lerp damping
       enter: 'top top',
       leave: 'bottom bottom',
       onUpdate: (self) => {
-        cardAnimation.progress = self.progress;
+        // Translation smoothly completes over [0, transRatio] then holds at 1.0 for the remaining threshold buffer
+        const clampedRatio = Math.min(1, self.progress / transRatio);
+        cardAnimation.progress = clampedRatio;
 
         const count = filteredEvents.length;
         if (count > 0) {
-          const rawIndex = Math.floor(self.progress * count);
+          const rawIndex = Math.floor(clampedRatio * count);
           const bounded = Math.min(Math.max(rawIndex, 0), count - 1);
           setActiveEventIndex(bounded);
         }
@@ -131,9 +138,12 @@ export default function EventsGrid({ events = [] }) {
     setActiveEventIndex(bounded);
 
     if (isDesktop && travelDistance > 0 && sectionRef.current) {
+      const EXIT_THRESHOLD = 500;
+      const totalDistance = travelDistance + EXIT_THRESHOLD;
+      const transRatio = travelDistance / totalDistance;
       const sectionTop = sectionRef.current.getBoundingClientRect().top + window.scrollY;
       const progressTarget = filteredEvents.length > 1 ? bounded / (filteredEvents.length - 1) : 0;
-      const targetScrollY = sectionTop + progressTarget * travelDistance;
+      const targetScrollY = sectionTop + (progressTarget * transRatio) * totalDistance;
       window.scrollTo({ top: targetScrollY, behavior: 'smooth' });
     } else if (trackRef.current) {
       const cardEl = trackRef.current.children[bounded];
@@ -154,8 +164,8 @@ export default function EventsGrid({ events = [] }) {
       ref={sectionRef}
       className="relative w-full text-slate-100"
       style={{
-        // Desktop height provides vertical runway; Mobile height is natural
-        height: isDesktop && travelDistance > 0 ? `calc(100vh + ${travelDistance}px)` : 'auto',
+        // Desktop height provides vertical runway with 500px threshold hold; Mobile height is natural
+        height: isDesktop && travelDistance > 0 ? `calc(100vh + ${travelDistance + 500}px)` : 'auto',
       }}
     >
       {/* STICKY VIEWPORT: Pinned at top: 0 for 100vh on Desktop */}

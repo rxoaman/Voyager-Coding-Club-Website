@@ -14,16 +14,15 @@ export default function IdCard({ member }) {
   return (
     <div
       onClick={handleCardClick}
-      className="badge-container group cursor-pointer w-[min(calc(100vw-5rem),295px)] sm:w-[295px] shrink-0 snap-start select-none"
+      className="badge-container group cursor-pointer w-[min(calc(100vw-5rem),285px)] sm:w-[285px] shrink-0 select-none pt-2"
     >
-      {/* Physical Lanyard Assembly: Clip and Strap */}
-      <div className="relative w-full h-6 flex items-center justify-center">
-        <div className="lanyard-strap" />
+      {/* Compact Top Badge Clip - Sits flush right at the top of the card without projecting upwards */}
+      <div className="w-full flex justify-center -mb-2 z-20 relative">
         <div className="lanyard-clip" />
       </div>
 
-      {/* The Physical Card Body with Liquid Glass effect - Fixed overflow protection */}
-      <div className="id-card-badge liquid-glass-card p-3.5 sm:p-4 flex flex-col justify-between h-[420px] sm:h-[435px] relative overflow-hidden rounded-2xl border border-white/10">
+      {/* The Physical Card Body with Liquid Glass effect */}
+      <div className="id-card-badge liquid-glass-card p-3.5 sm:p-4 flex flex-col justify-between h-[415px] sm:h-[430px] relative overflow-hidden rounded-2xl border border-white/10">
         
         {/* Lanyard slot punch */}
         <div className="lanyard-slot mb-2 shrink-0">
@@ -43,7 +42,7 @@ export default function IdCard({ member }) {
         </div>
 
         {/* Member Portrait Frame - Sized to prevent any card overflow */}
-        <div className="relative w-full h-[200px] sm:h-[210px] rounded-xl overflow-hidden border border-white/10 bg-black/60 shadow-inner shrink-0">
+        <div className="relative w-full h-[195px] sm:h-[205px] rounded-xl overflow-hidden border border-white/10 bg-black/60 shadow-inner shrink-0">
           <ResilientImage
             src={member.cardImage}
             alt={`${member.name} ID Card`}

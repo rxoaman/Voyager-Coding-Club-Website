@@ -1,5 +1,5 @@
 import React, { useRef, useState, useEffect, useCallback } from 'react';
-import { ChevronLeft, ChevronRight, Users, Search, ArrowRight, ArrowLeft } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Users, Search, ArrowRight, ArrowLeft, Sparkles } from 'lucide-react';
 import { animate, onScroll } from 'animejs';
 import IdCard from './IdCard';
 
@@ -14,6 +14,7 @@ export default function TeamGrid({ members = [], subTeams = [] }) {
   const viewportRef = useRef(null);
   const trackRef = useRef(null);
   const boxRef = useRef(null);
+  const teamAnchorRefs = useRef({});
 
   // The 4 core leadership teams strictly ordered
   const coreTeamIds = ['technical', 'management', 'social-media', 'design'];
@@ -23,18 +24,15 @@ export default function TeamGrid({ members = [], subTeams = [] }) {
 
   const currentTeam = orderedTeams[activeTeamIndex] || orderedTeams[0] || { id: 'technical', name: 'Technical Team' };
 
-  // Members of the currently active team
-  let currentMembers = members.filter(
-    (m) => m.subTeamId === currentTeam.id || m.subTeam.toLowerCase() === currentTeam.name.toLowerCase()
-  );
-
-  if (searchQuery) {
-    currentMembers = currentMembers.filter((m) =>
-      m.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (m.designation && m.designation.toLowerCase().includes(searchQuery.toLowerCase())) ||
-      (m.skills && m.skills.some((s) => s.toLowerCase().includes(searchQuery.toLowerCase())))
-    );
-  }
+  // Filtered members if search is active
+  const filteredSearchMembers = searchQuery
+    ? members.filter((m) =>
+        m.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (m.designation && m.designation.toLowerCase().includes(searchQuery.toLowerCase())) ||
+        (m.subTeam && m.subTeam.toLowerCase().includes(searchQuery.toLowerCase())) ||
+        (m.skills && m.skills.some((s) => s.toLowerCase().includes(searchQuery.toLowerCase())))
+      )
+    : null;
 
   // Calculate dynamic travel distance for horizontal scroll inside the team-focus-card container
   const updateTravelDistance = useCallback(() => {
@@ -45,7 +43,7 @@ export default function TeamGrid({ members = [], subTeams = [] }) {
     if (isLargeScreen) {
       const trackWidth = trackRef.current.scrollWidth;
       const containerWidth = boxRef.current.clientWidth;
-      // Exact distance required to translate all member cards inside the glass container
+      // Exact distance required to translate all member cards across all teams inside the glass container
       const distance = Math.max(0, trackWidth - containerWidth + 48);
       setTravelDistance(distance);
       if (distance <= 0) {
@@ -59,13 +57,19 @@ export default function TeamGrid({ members = [], subTeams = [] }) {
     }
   }, []);
 
-  // Anime.js v4 onScroll: Pinned horizontal scroll matching EventsGrid
+  // Exit threshold (600px hold runway) so the pinned section does not snap/move away easily
+  const EXIT_THRESHOLD = 600;
+
+  // Anime.js v4 onScroll: Continuous Multi-Team Horizontal Scroll with Exit Buffer
   useEffect(() => {
     updateTravelDistance();
 
     if (!isDesktop || travelDistance <= 0 || !sectionRef.current || !trackRef.current) {
       return;
     }
+
+    const totalDistance = travelDistance + EXIT_THRESHOLD;
+    const transRatio = travelDistance / totalDistance;
 
     // 1. Create horizontal translation animation
     const teamAnimation = animate(trackRef.current, {
@@ -81,8 +85,25 @@ export default function TeamGrid({ members = [], subTeams = [] }) {
       enter: 'top top',
       leave: 'bottom bottom',
       onUpdate: (self) => {
-        teamAnimation.progress = self.progress;
-        setScrollProgress(self.progress);
+        // Translation smoothly completes over [0, transRatio] then holds at 1.0 for the remaining threshold buffer
+        const clampedProgress = Math.min(1, self.progress / transRatio);
+        teamAnimation.progress = clampedProgress;
+        setScrollProgress(clampedProgress);
+
+        // Dynamically detect which team is currently in view as user scrolls
+        if (!searchQuery && trackRef.current && teamAnchorRefs.current) {
+          const currentX = clampedProgress * travelDistance;
+          let matchedIdx = 0;
+          for (let i = orderedTeams.length - 1; i >= 0; i--) {
+            const team = orderedTeams[i];
+            const anchorEl = teamAnchorRefs.current[team.id];
+            if (anchorEl && anchorEl.offsetLeft - 160 <= currentX) {
+              matchedIdx = i;
+              break;
+            }
+          }
+          setActiveTeamIndex((prev) => (prev !== matchedIdx ? matchedIdx : prev));
+        }
       },
     });
 
@@ -100,9 +121,9 @@ export default function TeamGrid({ members = [], subTeams = [] }) {
       }
       resizeObserver.disconnect();
     };
-  }, [isDesktop, travelDistance, activeTeamIndex, currentMembers.length, updateTravelDistance]);
+  }, [isDesktop, travelDistance, searchQuery, updateTravelDistance]);
 
-  // Mobile passive scroll listener for the Seen/Progress line
+  // Mobile passive scroll listener for the Seen/Progress line & active team detection
   const handleMobileScroll = useCallback(() => {
     const trackEl = trackRef.current;
     if (!trackEl || isDesktop) return;
@@ -117,33 +138,52 @@ export default function TeamGrid({ members = [], subTeams = [] }) {
       } else {
         setScrollProgress(Math.min(Math.max(current / maxScroll, 0), 1));
       }
-    }
-  }, [isDesktop]);
 
-  // Team Switcher functions (arrows switch sub-teams)
-  const handleTeamChange = (index) => {
-    setActiveTeamIndex(index);
-    setScrollProgress(0);
-    if (trackRef.current) {
-      trackRef.current.scrollLeft = 0;
-      trackRef.current.style.transform = 'none';
+      // Mobile active team detection
+      if (!searchQuery && teamAnchorRefs.current) {
+        let matchedIdx = 0;
+        for (let i = orderedTeams.length - 1; i >= 0; i--) {
+          const team = orderedTeams[i];
+          const anchorEl = teamAnchorRefs.current[team.id];
+          if (anchorEl && anchorEl.offsetLeft - 120 <= current) {
+            matchedIdx = i;
+            break;
+          }
+        }
+        setActiveTeamIndex((prev) => (prev !== matchedIdx ? matchedIdx : prev));
+      }
     }
-    // If pinned on desktop, reset window scroll to top of section
-    if (isDesktop && sectionRef.current) {
+  }, [isDesktop, searchQuery]);
+
+  // Smooth scroll / jump directly to any team
+  const scrollToTeam = (index) => {
+    const boundedIdx = Math.max(0, Math.min(index, orderedTeams.length - 1));
+    setActiveTeamIndex(boundedIdx);
+    const targetTeam = orderedTeams[boundedIdx];
+    if (!targetTeam) return;
+
+    const anchorEl = teamAnchorRefs.current[targetTeam.id];
+    if (isDesktop && travelDistance > 0 && sectionRef.current) {
+      const targetOffset = anchorEl ? anchorEl.offsetLeft : 0;
+      const targetRatio = Math.min(1, Math.max(0, targetOffset / travelDistance));
       const sectionTop = sectionRef.current.getBoundingClientRect().top + window.scrollY;
-      window.scrollTo({ top: sectionTop, behavior: 'smooth' });
+      const totalDistance = travelDistance + EXIT_THRESHOLD;
+      const transRatio = travelDistance / totalDistance;
+      const targetScrollY = sectionTop + (targetRatio * transRatio) * totalDistance;
+      window.scrollTo({ top: targetScrollY, behavior: 'smooth' });
+    } else if (anchorEl) {
+      anchorEl.scrollIntoView({ behavior: 'smooth', inline: 'start', block: 'nearest' });
     }
-    requestAnimationFrame(updateTravelDistance);
   };
 
   const handlePrevTeam = () => {
     const nextIdx = activeTeamIndex > 0 ? activeTeamIndex - 1 : orderedTeams.length - 1;
-    handleTeamChange(nextIdx);
+    scrollToTeam(nextIdx);
   };
 
   const handleNextTeam = () => {
     const nextIdx = activeTeamIndex < orderedTeams.length - 1 ? activeTeamIndex + 1 : 0;
-    handleTeamChange(nextIdx);
+    scrollToTeam(nextIdx);
   };
 
   return (
@@ -152,8 +192,8 @@ export default function TeamGrid({ members = [], subTeams = [] }) {
       ref={sectionRef}
       className="relative w-full text-slate-100"
       style={{
-        // Desktop height provides vertical runway; Mobile height is natural
-        height: isDesktop && travelDistance > 0 ? `calc(100vh + ${travelDistance}px)` : 'auto',
+        // Desktop height provides multi-team vertical runway with 600px exit buffer hold; Mobile height is natural
+        height: isDesktop && travelDistance > 0 ? `calc(100vh + ${travelDistance + EXIT_THRESHOLD}px)` : 'auto',
       }}
     >
       {/* STICKY VIEWPORT: Pinned at top: 0 for 100vh on Desktop */}
@@ -176,7 +216,7 @@ export default function TeamGrid({ members = [], subTeams = [] }) {
               </span>
             </div>
             <div className="font-mono text-xs text-zinc-500">
-              {isDesktop ? 'SCROLL DOWN TO ADVANCE MEMBERS ➔' : 'VOYAGER // CORE TEAM DIRECTORY'}
+              {isDesktop ? 'SCROLL DOWN TO ADVANCE THROUGH ALL TEAMS ➔' : 'VOYAGER // CORE LEADERSHIP'}
             </div>
           </div>
 
@@ -201,7 +241,7 @@ export default function TeamGrid({ members = [], subTeams = [] }) {
                     <button
                       key={team.id}
                       type="button"
-                      onClick={() => handleTeamChange(idx)}
+                      onClick={() => scrollToTeam(idx)}
                       className={`px-3.5 py-1.5 rounded-lg font-mono text-xs tracking-wider transition-all border cursor-pointer ${
                         isActive
                           ? 'bg-emerald-500 text-black border-emerald-500 font-bold shadow-sm'
@@ -222,7 +262,7 @@ export default function TeamGrid({ members = [], subTeams = [] }) {
                     type="text"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Search member..."
+                    placeholder="Search member or role..."
                     className="w-full pl-8 pr-3 py-1.5 rounded-lg bg-zinc-950 border border-white/10 text-xs font-mono text-zinc-200 placeholder-zinc-500 focus:outline-none focus:border-emerald-500 transition-colors"
                   />
                 </div>
@@ -255,68 +295,133 @@ export default function TeamGrid({ members = [], subTeams = [] }) {
               </div>
             </div>
 
-            {/* Team Headline & Description */}
+            {/* Team Headline & Dynamic Description based on visible team */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-3">
               <div>
                 <div className="flex items-center gap-3">
-                  <h2 className="font-display font-extrabold text-2xl sm:text-3xl text-white tracking-tight">
-                    {currentTeam.name}
+                  <h2 className="font-display font-extrabold text-2xl sm:text-3xl text-white tracking-tight transition-all duration-300">
+                    {searchQuery ? `Search Results` : currentTeam.name}
                   </h2>
                   <span className="font-mono text-xs px-2.5 py-0.5 rounded-full bg-zinc-900 text-emerald-400 border border-white/10 font-semibold">
-                    {currentMembers.length} {currentMembers.length === 1 ? 'member' : 'members'}
+                    {searchQuery
+                      ? `${filteredSearchMembers.length} found`
+                      : `${members.filter((m) => m.subTeamId === currentTeam.id || m.subTeam.toLowerCase() === currentTeam.name.toLowerCase()).length} members`}
                   </span>
                 </div>
-                {currentTeam.description && (
-                  <p className="font-sans text-xs sm:text-sm text-zinc-400 mt-1 max-w-2xl">
-                    {currentTeam.description}
-                  </p>
-                )}
+                <p className="font-sans text-xs sm:text-sm text-zinc-400 mt-1 max-w-2xl min-h-[20px] transition-all duration-300">
+                  {searchQuery
+                    ? `Showing all members matching "${searchQuery}" across teams.`
+                    : currentTeam.description}
+                </p>
               </div>
 
-              <div className="hidden sm:flex items-center gap-2 font-mono text-xs text-zinc-400">
-                {activeTeamIndex < orderedTeams.length - 1 && (
-                  <span className="flex items-center gap-1 text-zinc-400">
-                    Next: <span className="text-zinc-200">{orderedTeams[activeTeamIndex + 1].name}</span>
-                    <ArrowRight className="w-3.5 h-3.5 text-emerald-400" />
+              {!searchQuery && activeTeamIndex < orderedTeams.length - 1 && (
+                <button
+                  type="button"
+                  onClick={() => scrollToTeam(activeTeamIndex + 1)}
+                  className="hidden sm:inline-flex items-center gap-1.5 text-xs font-mono text-zinc-400 hover:text-white transition-colors cursor-pointer group"
+                >
+                  <span>Next:</span>
+                  <span className="text-zinc-200 group-hover:text-emerald-400 font-semibold transition-colors">
+                    {orderedTeams[activeTeamIndex + 1].name}
                   </span>
-                )}
-              </div>
+                  <ArrowRight className="w-3.5 h-3.5 text-emerald-400 group-hover:translate-x-1 transition-transform" />
+                </button>
+              )}
             </div>
 
-            {/* ID CARDS TRACK: Clipped safely inside the container; extra cards are hidden */}
-            {currentMembers.length > 0 ? (
-              <div
-                ref={trackRef}
-                onScroll={handleMobileScroll}
-                className={`flex gap-5 will-change-transform pt-2 pb-2 ${
-                  isDesktop
-                    ? 'w-max pl-1 sm:pl-2'
-                    : 'w-full overflow-x-auto px-1 no-scrollbar snap-x snap-mandatory touch-pan-x'
-                }`}
-                style={{
-                  WebkitOverflowScrolling: 'touch',
-                }}
-              >
-                {currentMembers.map((member) => (
-                  <IdCard key={member.id} member={member} />
-                ))}
-              </div>
-            ) : (
-              <div className="py-16 text-center text-zinc-500 font-mono text-xs">
-                No members in {currentTeam.name} match your search.
-              </div>
-            )}
+            {/* ID CARDS TRACK: Continuous multi-team sequence clipped safely inside container */}
+            <div
+              ref={trackRef}
+              onScroll={handleMobileScroll}
+              className={`flex gap-5 will-change-transform pt-2 pb-2 items-center ${
+                isDesktop
+                  ? 'w-max pl-1 sm:pl-2'
+                  : 'w-full overflow-x-auto px-1 no-scrollbar snap-x snap-mandatory touch-pan-x'
+              }`}
+              style={{
+                WebkitOverflowScrolling: 'touch',
+              }}
+            >
+              {searchQuery ? (
+                // Search Mode: Display all matched members
+                filteredSearchMembers.length > 0 ? (
+                  filteredSearchMembers.map((member) => (
+                    <IdCard key={member.id} member={member} />
+                  ))
+                ) : (
+                  <div className="py-16 px-8 text-center text-zinc-500 font-mono text-xs w-full">
+                    No members match your search "{searchQuery}".
+                  </div>
+                )
+              ) : (
+                // Continuous Multi-Team Sequence: Tech -> Management -> Social Media -> Design
+                orderedTeams.map((team, teamIdx) => {
+                  const teamMembers = members.filter(
+                    (m) => m.subTeamId === team.id || m.subTeam.toLowerCase() === team.name.toLowerCase()
+                  );
+
+                  return (
+                    <React.Fragment key={team.id}>
+                      {/* Department Anchor Card (Chapter Divider) for Teams after the first */}
+                      {teamIdx > 0 && (
+                        <div
+                          ref={(el) => (teamAnchorRefs.current[team.id] = el)}
+                          className="w-[260px] sm:w-[280px] shrink-0 h-[415px] sm:h-[430px] rounded-2xl border border-dashed border-emerald-500/30 bg-emerald-950/20 backdrop-blur-sm flex flex-col justify-between p-6 text-left select-none relative overflow-hidden group hover:border-emerald-500/60 transition-colors"
+                        >
+                          <div className="space-y-3">
+                            <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
+                              <Users className="w-5 h-5" />
+                            </div>
+                            <span className="inline-block font-mono text-[10px] uppercase tracking-widest text-emerald-400 font-bold bg-emerald-950/80 px-2 py-0.5 rounded border border-emerald-500/30">
+                              Department 0{teamIdx + 1}
+                            </span>
+                            <h3 className="font-display font-extrabold text-xl text-white">
+                              {team.name}
+                            </h3>
+                            <p className="font-mono text-xs text-zinc-400 leading-relaxed">
+                              {team.description}
+                            </p>
+                          </div>
+
+                          <div className="pt-4 border-t border-white/10 flex items-center justify-between font-mono text-xs text-emerald-400">
+                            <span>{teamMembers.length} members</span>
+                            <ArrowRight className="w-4 h-4 text-emerald-400 group-hover:translate-x-1 transition-transform" />
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Team Member Cards */}
+                      {teamMembers.map((member, mIdx) => (
+                        <div
+                          key={member.id}
+                          ref={teamIdx === 0 && mIdx === 0 ? (el) => (teamAnchorRefs.current[team.id] = el) : null}
+                          className="shrink-0"
+                        >
+                          <IdCard member={member} />
+                        </div>
+                      ))}
+                    </React.Fragment>
+                  );
+                })
+              )}
+            </div>
 
             {/* Bottom Seen/Progress Bar & Quick Team Navigation */}
             <div className="mt-4 pt-3.5 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-3">
               {/* Progress bar */}
-              <div className="w-full sm:w-72 h-1.5 bg-zinc-900 rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-emerald-500 rounded-full transition-all duration-150"
-                  style={{
-                    width: `${scrollProgress >= 0.98 ? 100 : Math.max(Math.round(scrollProgress * 100), 15)}%`,
-                  }}
-                />
+              <div className="flex items-center gap-3 w-full sm:w-80">
+                <div className="flex-1 h-1.5 bg-zinc-900 rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-emerald-500 rounded-full transition-all duration-150"
+                    style={{
+                      width: `${scrollProgress >= 0.98 ? 100 : Math.max(Math.round(scrollProgress * 100), 10)}%`,
+                    }}
+                  />
+                </div>
+                <span className="font-mono text-[10px] text-zinc-400 whitespace-nowrap">
+                  {Math.round(scrollProgress * 100)}% SEEN
+                </span>
               </div>
 
               {/* Next / Previous Team quick buttons */}
@@ -324,7 +429,7 @@ export default function TeamGrid({ members = [], subTeams = [] }) {
                 <button
                   type="button"
                   disabled={activeTeamIndex === 0}
-                  onClick={() => handleTeamChange(activeTeamIndex - 1)}
+                  onClick={() => scrollToTeam(activeTeamIndex - 1)}
                   className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-zinc-900 border border-white/10 text-xs font-mono text-zinc-300 hover:text-white disabled:opacity-30 disabled:pointer-events-none transition-all cursor-pointer"
                 >
                   <ArrowLeft className="w-3.5 h-3.5" />
@@ -334,7 +439,7 @@ export default function TeamGrid({ members = [], subTeams = [] }) {
                 <button
                   type="button"
                   disabled={activeTeamIndex === orderedTeams.length - 1}
-                  onClick={() => handleTeamChange(activeTeamIndex + 1)}
+                  onClick={() => scrollToTeam(activeTeamIndex + 1)}
                   className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-zinc-900 border border-white/10 text-xs font-mono text-zinc-300 hover:text-white disabled:opacity-30 disabled:pointer-events-none transition-all cursor-pointer"
                 >
                   <span>Next team</span>
