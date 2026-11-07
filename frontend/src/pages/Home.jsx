@@ -48,7 +48,7 @@ export default function Home({ navLogoTargetRef }) {
       const rawHash = window.location.hash.slice(1).toLowerCase();
       const targetId = (rawHash === 'teams' || rawHash.startsWith('teams-')) ? 'teams' : (rawHash.startsWith('team-') ? 'team' : rawHash);
       const timer = setTimeout(() => {
-        const el = document.getElementById(targetId) || document.getElementById(rawHash);
+        const el = document.getElementById(rawHash) || document.getElementById(targetId);
         if (el) {
           el.scrollIntoView({ behavior: 'smooth' });
         }
