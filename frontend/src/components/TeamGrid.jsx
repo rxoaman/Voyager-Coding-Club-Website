@@ -7,7 +7,7 @@ export default function TeamGrid({ members = [], subTeams = [] }) {
   const [activeTeamIndex, setActiveTeamIndex] = useState(0);
   const [searchQuery, setSearchQuery] = useState('');
   const [scrollProgress, setScrollProgress] = useState(0);
-  const [isDesktop, setIsDesktop] = useState(false);
+  const [isDesktop, setIsDesktop] = useState(() => typeof window !== 'undefined' && window.innerWidth >= 768);
 
   const sectionRef = useRef(null);
   const viewportRef = useRef(null);
@@ -22,10 +22,6 @@ export default function TeamGrid({ members = [], subTeams = [] }) {
 
   const activeTeamIndexRef = useRef(activeTeamIndex);
   activeTeamIndexRef.current = activeTeamIndex;
-
-  // Touch tracking for mobile swipe between teams
-  const touchStartX = useRef(null);
-  const touchStartY = useRef(null);
 
   // The 4 core leadership teams strictly ordered
   const coreTeamIds = ['technical', 'management', 'social-media', 'design'];
@@ -83,7 +79,7 @@ export default function TeamGrid({ members = [], subTeams = [] }) {
       const targetScrollY = sectionTop + targetRatio * TOTAL_RUNWAY;
       window.scrollTo({ top: targetScrollY, behavior: 'smooth' });
     } else if (trackRef.current) {
-      trackRef.current.scrollLeft = 0;
+      trackRef.current.scrollTo({ left: 0, behavior: 'smooth' });
     }
   }, [orderedTeams, TOTAL_RUNWAY]);
 
@@ -164,7 +160,7 @@ export default function TeamGrid({ members = [], subTeams = [] }) {
     return () => window.removeEventListener('hashchange', handleHash);
   }, [orderedTeams, scrollToTeam]);
 
-  // Mobile passive horizontal scroll listener
+  // Mobile passive horizontal scroll listener for the Seen/Progress bar
   const handleMobileScroll = useCallback(() => {
     const trackEl = trackRef.current;
     if (!trackEl || isDesktop) return;
@@ -176,40 +172,6 @@ export default function TeamGrid({ members = [], subTeams = [] }) {
       setScrollProgress(Math.min(Math.max(trackEl.scrollLeft / maxScroll, 0), 1));
     }
   }, [isDesktop]);
-
-  // Mobile touch swipe at boundary to advance to next / previous team
-  const handleTouchStart = (e) => {
-    if (isDesktop) return;
-    touchStartX.current = e.touches[0].clientX;
-    touchStartY.current = e.touches[0].clientY;
-  };
-
-  const handleTouchEnd = (e) => {
-    if (isDesktop || touchStartX.current === null) return;
-    const touchEndX = e.changedTouches[0].clientX;
-    const touchEndY = e.changedTouches[0].clientY;
-    const deltaX = touchStartX.current - touchEndX;
-    const deltaY = touchStartY.current - touchEndY;
-
-    // Detect intentional horizontal swipe at track boundaries
-    if (Math.abs(deltaX) > Math.abs(deltaY) * 1.5 && Math.abs(deltaX) > 45) {
-      const trackEl = trackRef.current;
-      if (trackEl) {
-        const isAtEnd = trackEl.scrollLeft + trackEl.clientWidth >= trackEl.scrollWidth - 15;
-        const isAtStart = trackEl.scrollLeft <= 15;
-
-        if (deltaX > 0 && isAtEnd && activeTeamIndex < orderedTeams.length - 1) {
-          // Swiped left at end -> advance to next team
-          scrollToTeam(activeTeamIndex + 1);
-        } else if (deltaX < 0 && isAtStart && activeTeamIndex > 0) {
-          // Swiped right at start -> back to previous team
-          scrollToTeam(activeTeamIndex - 1);
-        }
-      }
-    }
-    touchStartX.current = null;
-    touchStartY.current = null;
-  };
 
   const handlePrevTeam = () => {
     if (activeTeamIndex > 0) {
@@ -382,12 +344,9 @@ export default function TeamGrid({ members = [], subTeams = [] }) {
               </div>
             )}
 
-            {/* ID CARDS TRACK: Only current team's members are present (no extra divider cards!) */}
+            {/* ID CARDS TRACK: Native smooth horizontal scrolling on mobile; Anime.js translate on desktop */}
             <div
-              key={isSearching ? 'search' : currentTeam.id}
               ref={trackRef}
-              onTouchStart={handleTouchStart}
-              onTouchEnd={handleTouchEnd}
               onScroll={handleMobileScroll}
               className={`flex gap-5 will-change-transform pt-3 pb-2 items-center ${
                 isDesktop

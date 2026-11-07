@@ -39,12 +39,19 @@ export function initHeroScrollAnimation({
       }
 
       // 2. Smooth fade of "Voyager Coding Club" text & hero copy on scroll
-      const textOpacity = Math.max(1 - progress * 1.5, 0);
-      const textTranslateY = -progress * 30;
+      const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+      // On mobile, keep text fully visible so no empty black void appears below the emblem;
+      // on desktop, fade gracefully as emblem completes flight into fixed navbar
+      const textOpacity = isMobile
+        ? 1
+        : progress < 0.35
+          ? 1
+          : Math.max(1 - (progress - 0.35) * 1.5, 0);
+      const textTranslateY = isMobile ? 0 : -progress * 25;
 
       if (heroTextRef) {
         heroTextRef.style.opacity = `${textOpacity.toFixed(2)}`;
-        heroTextRef.style.transform = `translate3d(0, ${textTranslateY.toFixed(1)}px, 0)`;
+        heroTextRef.style.transform = isMobile ? 'none' : `translate3d(0, ${textTranslateY.toFixed(1)}px, 0)`;
       }
 
       if (heroPillRef) {

@@ -26,9 +26,9 @@ export default function HeroScroll({ navLogoTargetRef }) {
     <section
       id="hero"
       ref={heroSectionRef}
-      className="relative min-h-0 sm:min-h-screen flex items-center justify-center pt-20 sm:pt-24 pb-6 sm:pb-16 px-4 sm:px-6 lg:px-8 canvas-grid"
+      className="relative min-h-0 sm:min-h-screen flex items-center justify-center pt-16 sm:pt-24 pb-2 sm:pb-6 px-4 sm:px-6 lg:px-8 canvas-grid"
     >
-      <div className="max-w-7xl w-full mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center relative z-10">
+      <div className="max-w-7xl w-full mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8 sm:gap-12 lg:gap-16 items-center relative z-10">
         
         {/* LEFT COLUMN: Large Voyager Binary Cube Emblem */}
         <div className="lg:col-span-5 flex flex-col items-center justify-center order-1">
@@ -118,7 +118,7 @@ export default function HeroScroll({ navLogoTargetRef }) {
       </div>
 
       {/* Scroll indicator prompt - hidden on mobile to prevent dead vertical void */}
-      <div className="hidden sm:flex absolute bottom-5 left-1/2 -translate-x-1/2 items-center gap-2 text-zinc-500 text-xs font-mono select-none pointer-events-none">
+      <div className="hidden sm:flex absolute bottom-4 left-1/2 -translate-x-1/2 items-center gap-2 text-zinc-500 text-xs font-mono select-none pointer-events-none">
         <span>Scroll to explore</span>
         <ArrowDown className="w-3.5 h-3.5 text-emerald-400 animate-bounce" />
       </div>

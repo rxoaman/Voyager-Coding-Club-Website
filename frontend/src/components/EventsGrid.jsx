@@ -12,7 +12,7 @@ function parseEventDate(dateStr) {
 export default function EventsGrid({ events = [] }) {
   const [filterStatus, setFilterStatus] = useState('all'); // 'all', 'live', 'completed'
   const [activeEventIndex, setActiveEventIndex] = useState(0);
-  const [isDesktop, setIsDesktop] = useState(false);
+  const [isDesktop, setIsDesktop] = useState(() => typeof window !== 'undefined' && window.innerWidth >= 768);
   const [travelDistance, setTravelDistance] = useState(0);
 
   const sectionRef = useRef(null);
@@ -216,8 +216,8 @@ export default function EventsGrid({ events = [] }) {
         ref={viewportRef}
         className={`w-full overflow-hidden ${
           isDesktop
-            ? 'sticky top-0 min-h-screen flex flex-col justify-center pt-16 sm:pt-20 pb-4 overflow-hidden'
-            : 'relative py-6 sm:py-8'
+            ? 'sticky top-0 min-h-screen flex flex-col justify-center pt-12 sm:pt-16 pb-4 overflow-hidden'
+            : 'relative pt-2 pb-6 sm:py-8'
         }`}
       >
         <div className="max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8">
