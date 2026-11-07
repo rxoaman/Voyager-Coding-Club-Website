@@ -36,7 +36,7 @@ export default function TeamGrid({ members = [], subTeams = [] }) {
     );
   }
 
-  // Calculate dynamic travel distance for horizontal scroll
+  // Calculate dynamic travel distance for horizontal scroll inside the team-focus-card container
   const updateTravelDistance = useCallback(() => {
     if (!trackRef.current || !boxRef.current) return;
     const isLargeScreen = window.innerWidth >= 768;
@@ -45,7 +45,7 @@ export default function TeamGrid({ members = [], subTeams = [] }) {
     if (isLargeScreen) {
       const trackWidth = trackRef.current.scrollWidth;
       const containerWidth = boxRef.current.clientWidth;
-      // Add padding so the last ID card clears inside the container comfortably
+      // Exact distance required to translate all member cards inside the glass container
       const distance = Math.max(0, trackWidth - containerWidth + 48);
       setTravelDistance(distance);
       if (distance <= 0) {
@@ -59,7 +59,7 @@ export default function TeamGrid({ members = [], subTeams = [] }) {
     }
   }, []);
 
-  // Anime.js v4 onScroll Observer: Pinned Horizontal Scroll for Member Cards
+  // Anime.js v4 onScroll: Pinned horizontal scroll matching EventsGrid
   useEffect(() => {
     updateTravelDistance();
 
@@ -86,7 +86,7 @@ export default function TeamGrid({ members = [], subTeams = [] }) {
       },
     });
 
-    // 3. Dynamic ResizeObserver
+    // 3. Dynamic ResizeObserver observing container and track bounds
     const resizeObserver = new ResizeObserver(() => {
       updateTravelDistance();
     });
@@ -120,7 +120,7 @@ export default function TeamGrid({ members = [], subTeams = [] }) {
     }
   }, [isDesktop]);
 
-  // Team Switcher functions (arrows switch TEAMS)
+  // Team Switcher functions (arrows switch sub-teams)
   const handleTeamChange = (index) => {
     setActiveTeamIndex(index);
     setScrollProgress(0);
@@ -180,11 +180,11 @@ export default function TeamGrid({ members = [], subTeams = [] }) {
             </div>
           </div>
 
-          {/* INNER GLASS CONTAINER */}
+          {/* INNER GLASS CONTAINER: Strictly clips all extra cards outside the box */}
           <div
             id="team-focus-card"
             ref={boxRef}
-            className="liquid-glass rounded-3xl p-4 sm:p-7 relative flex flex-col justify-between shadow-2xl"
+            className="liquid-glass rounded-3xl p-4 sm:p-7 relative flex flex-col justify-between shadow-2xl overflow-hidden border border-white/10"
           >
             {/* Top Controls: Team Switcher Tabs + Search & Team Arrows */}
             <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3.5 pb-4 border-b border-white/10">
@@ -283,17 +283,15 @@ export default function TeamGrid({ members = [], subTeams = [] }) {
               </div>
             </div>
 
-            {/* OVERFLOWING ID CARDS TRACK:
-                - Desktop: translates along X via Anime.js v4 onScroll
-                - Mobile: native hardware-accelerated momentum touch scrolling */}
+            {/* ID CARDS TRACK: Clipped safely inside the container; extra cards are hidden */}
             {currentMembers.length > 0 ? (
               <div
                 ref={trackRef}
                 onScroll={handleMobileScroll}
-                className={`flex gap-4 sm:gap-6 will-change-transform py-3 ${
+                className={`flex gap-5 will-change-transform pt-2 pb-2 ${
                   isDesktop
                     ? 'w-max pl-1 sm:pl-2'
-                    : 'w-full overflow-x-auto px-1 sm:px-6 md:px-8 no-scrollbar snap-x snap-mandatory touch-pan-x scroll-pl-1 sm:scroll-pl-6'
+                    : 'w-full overflow-x-auto px-1 no-scrollbar snap-x snap-mandatory touch-pan-x'
                 }`}
                 style={{
                   WebkitOverflowScrolling: 'touch',

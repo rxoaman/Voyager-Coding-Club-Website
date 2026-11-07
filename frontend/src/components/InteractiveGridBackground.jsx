@@ -4,7 +4,7 @@ import React, { useEffect, useRef, useState } from 'react';
  * InteractiveGridBackground
  * Renders a subtle, non-distracting sci-fi grid background on PC
  * with little green dots on the crossed sections, vignette fading
- * between corners, and a rotating green-tinted star following the mouse cursor.
+ * between corners, and a 100px green-to-normal gradient glow with rotating star on cursor.
  */
 export default function InteractiveGridBackground() {
   const containerRef = useRef(null);
@@ -79,13 +79,24 @@ export default function InteractiveGridBackground() {
       {/* 2. Little glowing green dots on the crossed section of the grids */}
       <div className="absolute inset-0 interactive-grid-dots opacity-70" />
 
-      {/* 3. Cursor illumination spotlight on grid lines */}
-      <div className="absolute inset-0 interactive-grid-glow opacity-60" />
+      {/* 3. Soft 100px ambient cursor gradient glow from green to normal */}
+      {isDesktop && (
+        <div
+          className="absolute inset-0 transition-opacity duration-300 pointer-events-none"
+          style={{
+            background: 'radial-gradient(100px circle at var(--cursor-x) var(--cursor-y), rgba(0, 255, 136, 0.14) 0%, rgba(0, 255, 136, 0.04) 50%, transparent 100%)',
+            opacity: hasCursor ? 1 : 0,
+          }}
+        />
+      )}
 
-      {/* 4. Cursor illumination on intersection dots */}
-      <div className="absolute inset-0 interactive-grid-dots-glow opacity-80" />
+      {/* 4. 100px Cursor illumination spotlight on grid lines */}
+      <div className="absolute inset-0 interactive-grid-glow opacity-65" />
 
-      {/* 5. Rotating green-tinted star following the mouse cursor */}
+      {/* 5. 100px Cursor illumination on intersection dots */}
+      <div className="absolute inset-0 interactive-grid-dots-glow opacity-85" />
+
+      {/* 6. Rotating green-tinted star following the mouse cursor */}
       {isDesktop && (
         <div
           className="fixed pointer-events-none z-50 transition-opacity duration-300 will-change-transform"

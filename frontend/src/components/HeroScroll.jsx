@@ -5,6 +5,7 @@ import { initHeroScrollAnimation } from '../animations/heroFlight';
 export default function HeroScroll({ navLogoTargetRef }) {
   const heroLogoRef = useRef(null);
   const heroTextRef = useRef(null);
+  const heroPillRef = useRef(null);
   const heroSectionRef = useRef(null);
 
   useEffect(() => {
@@ -14,6 +15,7 @@ export default function HeroScroll({ navLogoTargetRef }) {
       heroLogoRef: heroLogoRef.current,
       navLogoTargetRef: navLogoTargetRef.current,
       heroTextRef: heroTextRef.current,
+      heroPillRef: heroPillRef.current,
       scrollThreshold: 450
     });
 
@@ -41,7 +43,7 @@ export default function HeroScroll({ navLogoTargetRef }) {
             />
           </div>
 
-          <div className="mt-3 flex items-center gap-2 font-mono text-xs text-zinc-200 bg-zinc-950/80 px-3.5 py-1 rounded-full border border-white/10">
+          <div ref={heroPillRef} className="mt-3 flex items-center gap-2 font-mono text-xs text-zinc-200 bg-zinc-950/80 px-3.5 py-1 rounded-full border border-white/10 transition-opacity duration-150">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
             <span>VOYAGER CODING CLUB</span>
           </div>
@@ -106,7 +108,7 @@ export default function HeroScroll({ navLogoTargetRef }) {
               <div className="text-xs font-mono text-zinc-400">Core badges</div>
             </div>
             <div>
-              <div className="font-mono text-2xl font-bold text-white">300+</div>
+              <div className="font-mono text-2xl font-bold text-white">750+</div>
               <div className="text-xs font-mono text-zinc-400">Participants</div>
             </div>
           </div>
