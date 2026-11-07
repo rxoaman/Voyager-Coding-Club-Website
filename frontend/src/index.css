@@ -5,8 +5,13 @@
 @layer base {
   html {
     scroll-behavior: smooth;
-    scroll-snap-type: y proximity;
+  }
 
+  /* Vertical scroll snap only on PC/desktop; mobile touch scroll remains completely free and natural */
+  @media (min-width: 768px) {
+    html {
+      scroll-snap-type: y proximity;
+    }
   }
 
   body {

@@ -61,8 +61,8 @@ export default function Navbar({ navLogoTargetRef }) {
             {/* The Target Container: Clean Unboxed Logo matching text height */}
             <div
               ref={navLogoTargetRef}
-              className={`w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center transition-all duration-300 overflow-visible ${
-                isHomePage ? 'opacity-0 scale-75' : 'opacity-100 scale-100'
+              className={`w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center overflow-visible ${
+                isHomePage ? 'opacity-0 scale-75' : 'opacity-100 scale-100 transition-all duration-300'
               }`}
               title="Voyager Logo"
             >

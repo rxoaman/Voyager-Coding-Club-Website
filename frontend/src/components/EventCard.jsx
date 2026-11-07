@@ -8,7 +8,7 @@ export default function EventCard({ event }) {
   const statusLabel = isLive ? 'LIVE NOW' : 'COMPLETED';
 
   return (
-    <article className="group liquid-glass-card rounded-2xl overflow-hidden flex flex-col justify-between w-[calc(90vw-2.5rem)] max-w-[340px] sm:max-w-none sm:w-[350px] lg:w-[370px] shrink-0 snap-start select-none border border-white/10">
+    <article className="group liquid-glass-card rounded-2xl overflow-hidden flex flex-col justify-between w-[calc(90vw-2.5rem)] max-w-[340px] sm:max-w-none sm:w-[350px] lg:w-[370px] shrink-0 select-none border border-white/10">
       
       {/* Event banner */}
       <div className="relative w-full h-36 sm:h-40 lg:h-44 bg-black/60 overflow-hidden shrink-0">

@@ -118,7 +118,7 @@ The team section uses a **single unified glass container** for all 4 sub-teams (
 - **Team tabs** at the top of the container let you jump directly to any team's cards.
 - **Progress bar** at the bottom shows `XX% SEEN` as you advance through all teams.
 
-> **Note:** Page-level scroll snapping uses `scroll-snap-type: y proximity` on `html` with `snap-start` on the Event, Team, and Footer containers. Snap has been removed from individual member cards so they scroll smoothly without jitter, and the footer is fully accessible at all times.
+> **Note:** Page-level scroll snapping uses `scroll-snap-type: y proximity` on `html` on desktop screens (`@media (min-width: 768px)`) with `snap-start` on the Event, Team, and Footer containers. On mobile devices, page-level scroll snap and touch locks are removed to allow phone users to scroll through freely and smoothly whenever they want, while desktop users retain the pinned horizontal runway experience.
 
 ---
 

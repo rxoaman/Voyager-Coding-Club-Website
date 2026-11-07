@@ -361,7 +361,7 @@ export default function TeamGrid({ members = [], subTeams = [] }) {
               className={`flex gap-5 pt-3 pb-2 items-center ${
                 isDesktop
                   ? 'w-max pl-1 sm:pl-2 will-change-transform'
-                  : 'w-full overflow-x-auto px-1 no-scrollbar touch-pan-x'
+                  : 'w-full overflow-x-auto px-1 no-scrollbar'
               }`}
               style={{
                 WebkitOverflowScrolling: 'touch',

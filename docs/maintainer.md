@@ -412,7 +412,7 @@ All glassmorphism effects are defined in [`frontend/src/index.css`](../frontend/
 * **Typography:** Space Grotesk (Headings), JetBrains Mono (Badges & Code), Inter (Body)
 
 > [!NOTE]
-> Page-level vertical scroll-snap is configured using `scroll-snap-type: y proximity` on `html`. The primary containers (`#hero`, `#events`, `#team`, and `#footer`) have `snap-start`, enabling smooth, natural docking when navigating between sections. Individual team member cards do NOT have snap applied (`snap-start` removed), allowing member cards to scroll freely and smoothly without jitter or snap-back. The footer retains `snap-start scroll-mt-8` with full margin clearance (`mt-12 sm:mt-16`), ensuring it is 100% accessible at all times without trapping the scroll.
+> Page-level vertical scroll-snap is configured using `scroll-snap-type: y proximity` on `html` scoped strictly to desktop viewports (`@media (min-width: 768px)`). The primary containers (`#hero`, `#events`, `#team`, and `#footer`) have `snap-start`, enabling smooth, natural docking on PC. On mobile devices, vertical scroll snap and horizontal touch locks (`touch-pan-x`) are disabled, allowing phone users to scroll vertically through the page freely whenever they want, while PC users remain locked into the pinned horizontal runway experience. The hero scroll flight animation accounts for scroll offset with exact linear interpolation, ensuring smooth flight and docking in both scroll-down and scroll-up directions on both phone and PC.
 
 ---
 

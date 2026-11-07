@@ -440,10 +440,10 @@ export default function EventsGrid({ events = [] }) {
             <div
               ref={trackRef}
               onScroll={handleMobileScroll}
-              className={`flex gap-5 will-change-transform pt-1.5 pb-2 ${
+              className={`flex gap-5 pt-1.5 pb-2 ${
                 isDesktop
-                  ? 'w-max pl-3 sm:pl-4 pr-3 sm:pr-4'
-                  : 'w-full overflow-x-auto px-1 no-scrollbar snap-x snap-mandatory touch-pan-x'
+                  ? 'w-max pl-3 sm:pl-4 pr-3 sm:pr-4 will-change-transform'
+                  : 'w-full overflow-x-auto px-1 no-scrollbar'
               }`}
               style={{
                 WebkitOverflowScrolling: 'touch',

@@ -25,17 +25,27 @@ export function initHeroScrollAnimation({
       const targetRect = navLogoTargetRef.getBoundingClientRect();
 
       if (heroContainerRect && targetRect) {
-        const deltaX = (targetRect.left + targetRect.width / 2) - (heroContainerRect.left + heroContainerRect.width / 2);
-        const deltaY = (targetRect.top + targetRect.height / 2) - (heroContainerRect.top + heroContainerRect.height / 2);
+        // Initial center coordinates in viewport space at scrollY = 0
+        const initialCenterX = heroContainerRect.left + heroContainerRect.width / 2;
+        const initialCenterY = heroContainerRect.top + scrollY + heroContainerRect.height / 2;
+        const targetCenterX = targetRect.left + targetRect.width / 2;
+        const targetCenterY = targetRect.top + targetRect.height / 2;
+
+        const deltaX = targetCenterX - initialCenterX;
+        const deltaY = targetCenterY - initialCenterY;
 
         const targetScale = Math.min(targetRect.width / Math.max(heroContainerRect.width, 1), 0.35);
         const scale = 1 - (1 - targetScale) * progress;
         const translateX = deltaX * progress;
-        const translateY = deltaY * progress;
-        const opacity = progress >= 0.96 ? 0 : 1;
+        // Accounting for scrollY offsets the parent element's scroll translation,
+        // ensuring a perfectly linear, direct glide between hero and navbar in both scroll directions
+        const translateY = deltaY * progress + scrollY;
+
+        // Smooth opacity crossfade as the emblem docks into or departs from the navbar
+        const opacity = progress >= 0.98 ? 0 : (progress < 0.85 ? 1 : Math.max(0, 1 - (progress - 0.85) / 0.13));
 
         heroLogoRef.style.transform = `translate3d(${translateX.toFixed(1)}px, ${translateY.toFixed(1)}px, 0) scale(${scale.toFixed(3)})`;
-        heroLogoRef.style.opacity = `${opacity}`;
+        heroLogoRef.style.opacity = `${opacity.toFixed(2)}`;
       }
 
       // 2. Smooth fade of "Voyager Coding Club" text & hero copy on scroll
@@ -60,13 +70,10 @@ export function initHeroScrollAnimation({
 
       // 3. Seamless reveal of navbar target logo
       if (navLogoTargetRef) {
-        if (progress >= 0.82) {
-          navLogoTargetRef.style.opacity = '1';
-          navLogoTargetRef.style.transform = 'scale(1)';
-        } else {
-          navLogoTargetRef.style.opacity = '0';
-          navLogoTargetRef.style.transform = 'scale(0.8)';
-        }
+        const navProgress = Math.max(0, Math.min(1, (progress - 0.85) / 0.13));
+        const navScale = 0.8 + 0.2 * navProgress;
+        navLogoTargetRef.style.opacity = `${navProgress.toFixed(2)}`;
+        navLogoTargetRef.style.transform = `scale(${navScale.toFixed(2)})`;
       }
     } catch (err) {
       console.warn('Scroll flight animation error:', err);
