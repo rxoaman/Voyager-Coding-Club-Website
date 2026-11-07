@@ -1,4 +1,4 @@
-# Voyager Coding Club Web Portal — Master Maintainer Manual (`maintainer.md`)
+# Voyager Coding Club Web Portal — Master Maintainer Manual
 
 Welcome to the **Voyager Coding Club Web Portal** master maintainer manual. This document is the definitive guide for club leads, maintainers, and developers. It details **every single element** present on the website, where its source code and data reside, and how to **edit, add, or delete** anything with zero ambiguity.
 
@@ -13,7 +13,7 @@ Welcome to the **Voyager Coding Club Web Portal** master maintainer manual. This
    - [How to EDIT an Existing Event](#how-to-edit-an-existing-event)
    - [How to DELETE an Event](#how-to-delete-an-event)
    - [The "Upcoming Always First" Rule](#the-upcoming-always-first-rule)
-5. [Team Members Section (Tabs, ID Badges & Sizing)](#5-team-members-section-tabs-id-badges--sizing)
+5. [Team Members Section (Single Container Horizontal Scroll)](#5-team-members-section-single-container-horizontal-scroll)
    - [How to ADD a New Team Member](#how-to-add-a-new-team-member)
    - [How to EDIT an Existing Team Member](#how-to-edit-an-existing-team-member)
    - [How to DELETE a Team Member](#how-to-delete-a-team-member)
@@ -22,7 +22,7 @@ Welcome to the **Voyager Coding Club Web Portal** master maintainer manual. This
 6. [Member Detail Page / Dossier View](#6-member-detail-page--dossier-view)
 7. [About / Five Pillars Section](#7-about--five-pillars-section)
 8. [Footer](#8-footer)
-9. [ID Card Dimensions, Scroll Snap & Threshold Tuning](#9-id-card-dimensions-scroll-snap--threshold-tuning)
+9. [ID Card Dimensions & Scroll Tuning](#9-id-card-dimensions--scroll-tuning)
 10. [Liquid Glass & Glassmorphism Design System](#10-liquid-glass--glassmorphism-design-system)
 11. [Running Locally & Opening to Wi-Fi / LAN](#11-running-locally--opening-to-wi-fi--lan)
 12. [Asset Directory Quick Reference](#12-asset-directory-quick-reference)
@@ -40,12 +40,12 @@ The Voyager Coding Club Web Portal is a complete, unified full-stack platform:
 
 | What You Are Changing | Where to Edit | Do You Need to Rebuild? |
 | :--- | :--- | :--- |
-| **Club Data** (Events, dates, links, team members, bios, skills) | [`frontend/src/data/clubData.js`](file:///frontend/src/data/clubData.js) | **NO BUILD NEEDED!** Django parses `clubData.js` dynamically on the fly. Save the file and the browser reloads in ~50ms. |
+| **Club Data** (Events, dates, links, team members, bios, skills) | [`frontend/src/data/clubData.js`](../frontend/src/data/clubData.js) | **NO BUILD NEEDED!** Django parses `clubData.js` dynamically on the fly. Save the file and the browser reloads in ~50ms. |
 | **UI Components & Layout** (`IdCard.jsx`, `Navbar.jsx`, `Home.jsx`, CSS) | `frontend/src/components/*.jsx` | **YES, RUN BUILD:** Browsers cannot run raw JSX. Run: <br>`python manage.py buildfrontend` <br>*(Takes ~3 seconds and compiles Vite into `frontend/dist/`)* |
 
 ### The Single Source of Truth for Data
 All club information, events, sub-teams, and members live inside:
-* **File:** [`frontend/src/data/clubData.js`](file:///frontend/src/data/clubData.js)
+* **File:** [`frontend/src/data/clubData.js`](../frontend/src/data/clubData.js)
 
 > [!TIP]
 > Django's `data_loader.py` dynamically monitors `clubData.js`. Whenever you save an edit to `clubData.js`, the Django REST API (`/api/events/`, `/api/team/`, `/api/club/`) immediately serves the new data, and `django-browser-reload` automatically refreshes all connected browsers in ~50ms. No database migrations needed!
@@ -54,7 +54,7 @@ All club information, events, sub-teams, and members live inside:
 
 ## 2. Navbar & Top Brand Bar
 
-* **Component File:** [`frontend/src/components/Navbar.jsx`](file:///frontend/src/components/Navbar.jsx)
+* **Component File:** [`frontend/src/components/Navbar.jsx`](../frontend/src/components/Navbar.jsx)
 
 ### Elements Present & How to Edit:
 
@@ -71,8 +71,8 @@ All club information, events, sub-teams, and members live inside:
 
 ## 3. Hero Section (Emblem, Headings, Metrics & Flight)
 
-* **Component File:** [`frontend/src/components/HeroScroll.jsx`](file:///frontend/src/components/HeroScroll.jsx)
-* **Animation File:** [`frontend/src/animations/heroFlight.js`](file:///frontend/src/animations/heroFlight.js)
+* **Component File:** [`frontend/src/components/HeroScroll.jsx`](../frontend/src/components/HeroScroll.jsx)
+* **Animation File:** [`frontend/src/animations/heroFlight.js`](../frontend/src/animations/heroFlight.js)
 
 ### Elements Present & How to Edit:
 
@@ -92,15 +92,6 @@ All club information, events, sub-teams, and members live inside:
 
 #### 3. Main Title & Tagline
 * **File:** `frontend/src/components/HeroScroll.jsx` (Lines ~63–72)
-```jsx
-<h1 className="font-display font-extrabold text-4xl sm:text-6xl text-white tracking-tight leading-none">
-  Voyager <br />
-  <span className="text-emerald-400">Coding Club</span>
-</h1>
-<p className="font-mono text-sm sm:text-base text-zinc-300 tracking-wider">
-  Grow | Collaborate | Connect
-</p>
-```
 
 #### 4. Mission Description Paragraph
 * **File:** `frontend/src/components/HeroScroll.jsx` (Lines ~75–77)
@@ -112,21 +103,7 @@ All club information, events, sub-teams, and members live inside:
 
 #### 6. Stat Counters / Metrics (Events, Badges, Participants)
 * **File:** `frontend/src/components/HeroScroll.jsx` (Lines ~99–112)
-```jsx
-<div>
-  <div className="font-mono text-2xl font-bold text-white">4</div>
-  <div className="text-xs font-mono text-zinc-400">Flagship events</div>
-</div>
-<div>
-  <div className="font-mono text-2xl font-bold text-emerald-400">14</div>
-  <div className="text-xs font-mono text-zinc-400">Core badges</div>
-</div>
-<div>
-  <div className="font-mono text-2xl font-bold text-white">300+</div>
-  <div className="text-xs font-mono text-zinc-400">Participants</div>
-</div>
-```
-* **To edit values:** Change `4`, `14`, or `300+`.
+* **To edit values:** Change `4`, `14`, or `300+` directly.
 * **To add another metric:** Add a 4th `<div>` column and change `grid-cols-3` to `grid-cols-4`.
 * **To delete a metric:** Remove one `<div>` block and adjust `grid-cols-3` to `grid-cols-2`.
 
@@ -138,14 +115,14 @@ All club information, events, sub-teams, and members live inside:
 
 ## 4. Club Events Section (Banners, Dates, Filters & Cards)
 
-* **Container Component:** [`frontend/src/components/EventsGrid.jsx`](file:///frontend/src/components/EventsGrid.jsx)
-* **Card Component:** [`frontend/src/components/EventCard.jsx`](file:///frontend/src/components/EventCard.jsx)
-* **Data File:** [`frontend/src/data/clubData.js`](file:///frontend/src/data/clubData.js) 
+* **Container Component:** [`frontend/src/components/EventsGrid.jsx`](../frontend/src/components/EventsGrid.jsx)
+* **Card Component:** [`frontend/src/components/EventCard.jsx`](../frontend/src/components/EventCard.jsx)
+* **Data File:** [`frontend/src/data/clubData.js`](../frontend/src/data/clubData.js)
 
 ### Header Elements in `EventsGrid.jsx`:
 1. **Prominent Date Tag:** Line ~64–66 (`28 Nov 2026 • 13th Protocol`). Edit text or date directly in `EventsGrid.jsx`.
 2. **Section Title:** Line ~70 (`Club Events`).
-3. **Filter Buttons (ALL, UPCOMING, COMPLETED):** Lines ~76–111. Automatically count and filter events based on `event.status`.
+3. **Filter Buttons (ALL, LIVE, COMPLETED):** Lines ~76–111. Automatically count and filter events based on `event.status`.
 
 ### Anatomy of an Event in `clubData.js`:
 Each event is an object in `export const EVENTS = [...]`:
@@ -170,80 +147,26 @@ Each event is an object in `export const EVENTS = [...]`:
 
 ---
 
-### How to Change the Action Button to "Register Now" & Change the Registration Link
-
-The action button at the bottom of each event card automatically adapts based on whether the event is **Upcoming** or **Completed**:
-
-1. **For Upcoming Events:**
-   - The button automatically displays **"Register Now"** styled as a high-contrast emerald CTA button (`bg-emerald-500 text-black font-bold`).
-   - It clicks through to `registrationUrl` (or `registerUrl`, `actionUrl`, or `linkedinPostUrl`).
-2. **For Completed Events:**
-   - The button automatically displays **"LinkedIn Post"** with the LinkedIn logo, linking to `linkedinPostUrl`.
-
-#### How to change the registration link for an upcoming event:
-1. Open [`frontend/src/data/clubData.js`](file:///frontend/src/data/clubData.js).
-2. Locate the upcoming event object (e.g. `id: "13th-protocol"`).
-3. Set or update the `registrationUrl` property with your actual registration link:
-   ```javascript
-   registrationUrl: "https://unstop.com/hackathons/13th-protocol-kccitm",
-   ```
-   *(You can paste a Google Form URL, Unstop link, Devfolio page, Luma event, or any external registration URL here).*
-4. (Optional) Custom button text: If you want the button to say something other than "Register Now" (e.g., *"Apply on Unstop"* or *"RSVP Now"*), simply add:
-   ```javascript
-   actionText: "Apply on Unstop",
-   ```
-5. Save the file. The button on the website will instantly link to your new registration URL!
-
-#### Where this logic is defined in code:
-* **File:** [`frontend/src/components/EventCard.jsx`](file:///frontend/src/components/EventCard.jsx) (Lines ~86–105)
-* Checks:
-  ```jsx
-  const href = event.registrationUrl || event.registerUrl || event.actionUrl || event.linkedinPostUrl;
-  const label = event.actionText || (isUpcoming ? 'Register Now' : 'LinkedIn Post');
-  ```
-
----
-
 ### How to ADD a New Event
-1. Open [`frontend/src/data/clubData.js`](file:///frontend/src/data/clubData.js).
-2. Inside `export const EVENTS = [ ... ]`, insert a new event object:
-```javascript
-  {
-    id: "new-hackathon-2027",
-    title: "Voyager CodeFest 2027",
-    badge: "Hackathon",
-    status: "Upcoming",       // Set to "Upcoming" if it is in the future
-    date: "15 Jan 2027",
-    time: "09:30 AM IST",
-    location: "KCCITM",       // Keep strictly as KCCITM
-    description: "Annual campus-wide software hackathon for students of KCCITM.",
-    imageUrl: "https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&w=1200&q=80",
-    linkedinPostUrl: "https://www.linkedin.com/company/voyager-coding-club",
-    highlights: ["24-Hour Build", "Prizes & Swag", "Industry Mentors"],
-    category: "Hackathon"
-  },
-```
+1. Open [`frontend/src/data/clubData.js`](../frontend/src/data/clubData.js).
+2. Inside `export const EVENTS = [ ... ]`, insert a new event object (see template above).
 3. Save the file. The new event will immediately appear on the site!
 
 ---
 
 ### How to EDIT an Existing Event
-1. Open [`frontend/src/data/clubData.js`](file:///frontend/src/data/clubData.js).
+1. Open [`frontend/src/data/clubData.js`](../frontend/src/data/clubData.js).
 2. Locate the event by its `id` (e.g., `id: "13th-protocol"`).
-3. Modify any field:
-   - Change `title` to rename the event.
-   - Change `date` or `time` to reschedule.
-   - Change `imageUrl` to change the banner.
-   - Change `description` or `highlights`.
-   - Change `status: "Completed"` once the event is finished (this will automatically remove the green `UPCOMING` badge).
-4. Save the file.
+3. Modify any field — `title`, `date`, `time`, `imageUrl`, `description`, `highlights`.
+4. Change `status: "Completed"` once the event is finished (removes the green `UPCOMING` badge automatically).
+5. Save the file.
 
 ---
 
 ### How to DELETE an Event
-1. Open [`frontend/src/data/clubData.js`](file:///frontend/src/data/clubData.js).
+1. Open [`frontend/src/data/clubData.js`](../frontend/src/data/clubData.js).
 2. Highlight and delete the entire `{ ... },` block of the event you wish to remove from `EVENTS`.
-3. Save the file. The event will disappear from the UI and API instantly.
+3. Save the file. The event disappears from the UI and API instantly.
 
 ---
 
@@ -253,23 +176,32 @@ The action button at the bottom of each event card automatically adapts based on
 
 ---
 
-## 5. Team Members Section (Tabs, ID Badges & Sizing)
+## 5. Team Members Section (Single Container Horizontal Scroll)
 
-* **Container Component:** [`frontend/src/components/TeamGrid.jsx`](file:///frontend/src/components/TeamGrid.jsx)
-* **ID Card Component:** [`frontend/src/components/IdCard.jsx`](file:///frontend/src/components/IdCard.jsx)
-* **Data File:** [`frontend/src/data/clubData.js`](file:///frontend/src/data/clubData.js) 
+* **Container Component:** [`frontend/src/components/TeamGrid.jsx`](../frontend/src/components/TeamGrid.jsx)
+* **ID Card Component:** [`frontend/src/components/IdCard.jsx`](../frontend/src/components/IdCard.jsx)
+* **Data File:** [`frontend/src/data/clubData.js`](../frontend/src/data/clubData.js)
 
-### Header Elements in `TeamGrid.jsx`:
-1. **Section Pill:** Line ~65 (`CLUB LEADERSHIP DIRECTORY`).
-2. **Section Title:** Line ~70 (`Team Members`).
-3. **Live Search Bar:** Lines ~75–88. Searches live by name, designation, or skills array.
-4. **Sub-Team Navigation Tabs:** Lines ~98–117.
-   - **Technical Team (5)**
-   - **Management Team (5)**
-   - **Social Media Team (2)**
-   - **Design Team (2)**
-5. **Team Navigation Arrows:** Lines ~120–136 (`Team 1 of 4`, `<` Prev, `>` Next).
-6. **Active Sub-Team Mission Description:** Lines ~145–158 (e.g., *"Engineers building software architectures, web systems, and competitive programming pathways."*).
+### How the Scroll Works:
+The team section uses **ONE unified glass container** for all teams:
+- **Desktop (≥768px):** The section is `position: sticky` at the top of the viewport. As you **scroll down vertically**, all 14 member cards + team divider cards translate **horizontally** inside the container using Anime.js v4 `onScroll`. When you've scrolled through all teams (the track fully translates), a 600px exit buffer holds the section pinned before releasing the page scroll.
+- **Mobile (<768px):** The container behaves naturally in the page flow. Swipe **horizontally** on the card track to browse all teams sequentially. `snap-x snap-mandatory` keeps cards crisp on swipe.
+
+### Header Elements:
+1. **Eyebrow Tag:** `CLUB LEADERSHIP DIRECTORY` (top-left of container)
+2. **Desktop Hint:** `SCROLL DOWN TO ADVANCE THROUGH ALL TEAMS ➔` (top-right, desktop only)
+3. **Team Filter Tabs:** Four tab buttons — Technical, Management, Social Media, Design. Clicking them smooth-scrolls the page to position that team's first card into view.
+4. **Team Navigator:** `1/4` counter + `‹ ›` arrows for keyboard-friendly team switching.
+5. **Active Team Description Row:** Shows current team name, department number, and mission description.
+6. **Search Bar:** Live search across all teams by name, designation, title, or skills.
+7. **Progress Bar:** `XX% SEEN` bar at the bottom tracks how far through all teams you've scrolled.
+8. **Prev Team / Next Team buttons:** Quick jump buttons at the bottom of the container.
+
+### Sub-Teams (strictly ordered):
+- **Technical Team (5 members)**
+- **Management Team (5 members)**
+- **Social Media Team (2 members)**
+- **Design Team (2 members)**
 
 ---
 
@@ -277,30 +209,31 @@ The action button at the bottom of each event card automatically adapts based on
 Each member is an object in `export const TEAM_MEMBERS = [...]`:
 ```javascript
 {
-  id: "purushottam-kumar",                         // URL slug (used in /team/<id>)
-  name: "Purushottam Kumar",                       // Full member name
-  badgeNumber: 1,                                  // Numeric ID (#1)
-  badgeId: "VYR-TECH-001",                         // Printed badge string
-  cardImage: "/assets/id-cards/1.png",             // Holographic ID card background
-  photoUrl: "/assets/members/purushottam-kumar.png", // Cutout portrait photo (transparent BG)
-  gdrivePhotoUrl: "https://...",                   // Google Drive backup link
-  subTeam: "Technical Team",                       // Display name of sub-team
-  subTeamId: "technical",                          // Slug: "technical", "management", "social-media", "design"
-  designation: "Technical Lead",                   // Role title (printed on card)
-  title: "Web Architect",                          // Secondary specialization title
-  email: "purushottam.kccitm@gmail.com",           // Contact email
-  linkedin: "https://www.linkedin.com/in/...",     // LinkedIn profile URL
+  id: "purushottam-kumar",                           // URL slug (used in /team/<id>)
+  name: "Purushottam Kumar",                         // Full member name
+  badgeNumber: 1,                                    // Numeric ID (#1)
+  badgeId: "VYR-TECH-001",                           // Printed badge string
+  cardImage: "/assets/team/id-card/purushottam-kumar.webp",  // Holographic ID card background (WebP)
+  photoUrl: "/assets/team/bg-removed/purushottam-kumar.webp", // Cutout portrait (transparent BG, WebP)
+  subTeam: "Technical Team",                         // Display name of sub-team
+  subTeamId: "technical",                            // Slug: "technical", "management", "social-media", "design"
+  designation: "Technical Lead",                     // Role title (printed on card)
+  title: "Web Architect",                            // Secondary specialization title
+  email: "purushottam.kccitm@gmail.com",             // Contact email
+  linkedin: "https://www.linkedin.com/in/...",       // LinkedIn profile URL
   bio: "Full-stack developer building Voyager portal...", // Bio paragraph for dossier page
-  skills: ["React", "Django", "Tailwind CSS"]      // Array of skill tags
+  skills: ["React", "Django", "Tailwind CSS"]        // Array of skill tags
 }
 ```
 
 ---
 
 ### How to ADD a New Team Member
-1. Place the member's transparent cutout portrait in `frontend/public/assets/members/<slug>.png`.
-2. (Optional) Place the ID card artwork in `frontend/public/assets/id-cards/<number>.png`.
-3. Open [`frontend/src/data/clubData.js`](file:///frontend/src/data/clubData.js).
+1. Optimize the member's transparent cutout portrait to WebP and place it in:
+   `frontend/public/assets/team/bg-removed/<slug>.webp`
+2. Optimize the ID card artwork to WebP and place it in:
+   `frontend/public/assets/team/id-card/<slug>.webp`
+3. Open [`frontend/src/data/clubData.js`](../frontend/src/data/clubData.js).
 4. Add the new member object to `export const TEAM_MEMBERS = [ ... ]`:
 ```javascript
   {
@@ -308,8 +241,8 @@ Each member is an object in `export const TEAM_MEMBERS = [...]`:
     name: "Alex Sharma",
     badgeNumber: 15,
     badgeId: "VYR-TECH-015",
-    cardImage: "/assets/id-cards/1.png",
-    photoUrl: "/assets/members/alex-sharma.png",
+    cardImage: "/assets/team/id-card/alex-sharma.webp",
+    photoUrl: "/assets/team/bg-removed/alex-sharma.webp",
     subTeam: "Technical Team",
     subTeamId: "technical",
     designation: "Frontend Specialist",
@@ -320,24 +253,20 @@ Each member is an object in `export const TEAM_MEMBERS = [...]`:
     skills: ["React", "TypeScript", "Tailwind CSS"]
   },
 ```
-5. Save the file. The new card will render immediately in the Technical Team tab.
+5. Save the file. The new card will render immediately in the Technical Team section.
 
 ---
 
 ### How to EDIT an Existing Team Member
-1. Open [`frontend/src/data/clubData.js`](file:///frontend/src/data/clubData.js).
-2. Search for the member's name or `id` (e.g., `"Harsh Sharma"`).
-3. Edit any field:
-   - To update **LinkedIn**: change `linkedin: "https://www.linkedin.com/in/your-url/"`.
-   - To update **Email**: change `email: "new-email@example.com"`.
-   - To update **Role/Designation**: change `designation: "Senior Lead"`.
-   - To update **Bio** or **Skills**: change `bio: "..."` or edit the `skills: [...]` array.
+1. Open [`frontend/src/data/clubData.js`](../frontend/src/data/clubData.js).
+2. Search for the member's name or `id`.
+3. Edit any field — `linkedin`, `email`, `designation`, `bio`, or `skills`.
 4. Save the file.
 
 ---
 
 ### How to DELETE a Team Member
-1. Open [`frontend/src/data/clubData.js`](file:///frontend/src/data/clubData.js).
+1. Open [`frontend/src/data/clubData.js`](../frontend/src/data/clubData.js).
 2. Delete the member's `{ ... },` block from `TEAM_MEMBERS`.
 3. Save the file. The card, its badge count, and its `/team/<id>` route are removed immediately.
 
@@ -345,40 +274,43 @@ Each member is an object in `export const TEAM_MEMBERS = [...]`:
 
 ### How to MOVE a Member Between Sub-Teams
 Change both `subTeam` and `subTeamId` on the member object:
-* **To Technical Team:**
-  `subTeam: "Technical Team"`, `subTeamId: "technical"`
-* **To Management Team:**
-  `subTeam: "Management Team"`, `subTeamId: "management"`
-* **To Social Media Team:**
-  `subTeam: "Social Media Team"`, `subTeamId: "social-media"`
-* **To Design Team:**
-  `subTeam: "Design Team"`, `subTeamId: "design"`
+* **To Technical Team:** `subTeam: "Technical Team"`, `subTeamId: "technical"`
+* **To Management Team:** `subTeam: "Management Team"`, `subTeamId: "management"`
+* **To Social Media Team:** `subTeam: "Social Media Team"`, `subTeamId: "social-media"`
+* **To Design Team:** `subTeam: "Design Team"`, `subTeamId: "design"`
 
 ---
 
 ### How to Add/Replace Member Photos & ID Card Renders
-* **Cutout Portrait Photos:**
-  - Directory: [`frontend/public/assets/members/`](file:///frontend/public/assets/members/)
-  - Format: PNG with a **transparent background** (BG removed).
-  - Linked via `photoUrl: "/assets/members/<filename>.png"` in `clubData.js`.
-  - Alternatively, a direct Google Drive link or external CDN URL can be pasted into `photoUrl`.
+
+> [!IMPORTANT]
+> All member images are now stored locally as **WebP** files. Do NOT use PNG or external Google Drive links — WebP reduces file size by ~70% while maintaining image quality.
+
+* **Cutout Portrait Photos (background removed):**
+  - Directory: `frontend/public/assets/team/bg-removed/`
+  - Filename: `<member-id>.webp` (e.g., `purushottam-kumar.webp`)
+  - Format: WebP with transparent background.
+  - Linked via `photoUrl: "/assets/team/bg-removed/<slug>.webp"` in `clubData.js`.
+
 * **ID Card Artwork Renders:**
-  - Directory: [`frontend/public/assets/id-cards/`](file:///frontend/public/assets/id-cards/)
-  - Linked via `cardImage: "/assets/id-cards/<number>.png"` in `clubData.js`.
+  - Directory: `frontend/public/assets/team/id-card/`
+  - Filename: `<member-id>.webp` (e.g., `purushottam-kumar.webp`)
+  - Linked via `cardImage: "/assets/team/id-card/<slug>.webp"` in `clubData.js`.
+
+> [!NOTE]
+> The old `frontend/public/assets/id-cards/` (numbered PNG files) and `frontend/public/assets/members/` (name-based PNG portraits) directories have been deleted. All images now reside under `frontend/public/assets/team/`.
 
 ---
 
 ## 6. Member Detail Page / Dossier View
 
 * **Route:** `/team/:id` (e.g., `/team/purushottam-kumar`)
-* **Page File:** [`frontend/src/pages/MemberDetailPage.jsx`](file:///frontend/src/pages/MemberDetailPage.jsx)
-* **View Component:** [`frontend/src/components/MemberDetail.jsx`](file:///frontend/src/components/MemberDetail.jsx)
+* **Page File:** [`frontend/src/pages/MemberDetailPage.jsx`](../frontend/src/pages/MemberDetailPage.jsx)
+* **View Component:** [`frontend/src/components/MemberDetail.jsx`](../frontend/src/components/MemberDetail.jsx)
 
 ### Elements Present & How to Edit:
 * **"Back to team directory" button:** Line ~70. Returns to `/#team`.
-* **Isolated Cutout Figure & Glass Pedestal:** Lines ~81–118.
-  - Displays the background-removed photo popping out above a frosted liquid-glass pedestal (`.glass-pedestal`).
-  - Ambient emerald glow behind the figure.
+* **Isolated Cutout Figure & Glass Pedestal:** Lines ~81–118. Displays the background-removed photo above a frosted liquid-glass pedestal (`.glass-pedestal`).
 * **Badge Telemetry Tag:** Line ~90 (`VYR-TECH-001 • ACTIVE MEMBER`).
 * **Member Name & Designation:** Lines ~133–142.
 * **Biography Paragraph:** Lines ~145–150. Sourced directly from `member.bio` in `clubData.js`.
@@ -391,24 +323,19 @@ Change both `subTeam` and `subTeamId` on the member object:
 
 ## 7. About / Five Pillars Section
 
-* **Component File:** [`frontend/src/components/AboutSection.jsx`](file:///frontend/src/components/AboutSection.jsx)
+* **Component File:** [`frontend/src/components/AboutSection.jsx`](../frontend/src/components/AboutSection.jsx)
 
 ### Elements Present & How to Edit:
 1. **Section Pill:** Lines ~53–58 (`MISSION & FIVE PILLARS`).
-2. **Main Heading:** Lines ~60–62:
-   ```jsx
-   <h2 className="font-display font-extrabold text-3xl sm:text-4xl text-white tracking-tight">
-     Engineering The Future at <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#00FF88] to-cyan-400">KCCITM</span>
-   </h2>
-   ```
-3. **Mission Paragraph:** Lines ~64–66. Text describing the bridge between classroom theory and real-world tech systems at KCCITM.
+2. **Main Heading:** Lines ~60–62.
+3. **Mission Paragraph:** Lines ~64–66.
 4. **The 5 Core Domain Cards:** Lines ~11–45 (`domains` array).
    - Card 1: **Software Engineering & Web Architecture**
    - Card 2: **Systems, Cloud & DevOps Infrastructure**
    - Card 3: **Applied AI, Machine Learning & Data Systems**
    - Card 4: **Open Source Development & Tooling**
    - Card 5: **Cybersecurity & Network Protocols**
-   - *How to edit a domain:* Change `title`, `desc`, or `icon` in the `domains` array at lines ~11–45.
+   - *How to edit a domain:* Change `title`, `desc`, or `icon` in the `domains` array.
    - *How to add a 6th domain:* Add another object to the `domains` array.
    - *How to delete a domain:* Remove one object from the array.
 
@@ -416,7 +343,7 @@ Change both `subTeam` and `subTeamId` on the member object:
 
 ## 8. Footer
 
-* **Component File:** [`frontend/src/components/Footer.jsx`](file:///frontend/src/components/Footer.jsx)
+* **Component File:** [`frontend/src/components/Footer.jsx`](../frontend/src/components/Footer.jsx)
 
 ### Elements Present & How to Edit:
 1. **Brand Logo & Name:** Lines ~10–20:
@@ -429,18 +356,13 @@ Change both `subTeam` and `subTeamId` on the member object:
    - **GitHub:** `https://github.com/rxoaman/Voyager-s-Website`
    - *To change a link:* Edit the `href` attribute on the corresponding `<a>` tag.
    - *To delete a social icon:* Remove its `<a>...</a>` block.
-   - *To add a new social icon (e.g. Discord, X):* Import the icon from `lucide-react` and add a new `<a>` block.
-3. **Copyright Notice:** Line ~60:
-   ```jsx
-   © {new Date().getFullYear()} Voyager Coding Club, KCCITM.
-   ```
-   Automatically updates the year dynamically.
+3. **Copyright Notice:** Line ~60: `© {new Date().getFullYear()} Voyager Coding Club, KCCITM.` (auto-updates year)
 
 ---
 
-## 9. ID Card Dimensions, Scroll Snap & Threshold Tuning
+## 9. ID Card Dimensions & Scroll Tuning
 
-### ID Card Sizing (in [`frontend/src/components/IdCard.jsx`](file:///frontend/src/components/IdCard.jsx)):
+### ID Card Sizing (in [`frontend/src/components/IdCard.jsx`](../frontend/src/components/IdCard.jsx)):
 ```jsx
 // Outer Badge Container:
 <div className="badge-container group cursor-pointer w-[285px] sm:w-[305px] shrink-0 snap-start select-none">
@@ -457,36 +379,23 @@ Change both `subTeam` and `subTeamId` on the member object:
 
 ---
 
-### Inner Div Snap Anchor (in [`frontend/src/components/TeamGrid.jsx`](file:///frontend/src/components/TeamGrid.jsx)):
-Instead of snapping prematurely to the title or outer margin, the snap point is attached directly to the **inner container**:
-```jsx
-<div
-  id="team-focus-card"
-  ref={boxRef}
-  className="liquid-glass rounded-3xl p-5 sm:p-7 relative flex flex-col justify-between shadow-2xl snap-start scroll-mt-24"
->
-```
-* `snap-start`: Locks the inner card to the viewport top when scrolling down.
-* `scroll-mt-24`: Offsets the snap point by 96px so it rests cleanly below the fixed navbar.
-
----
-
-### Scroll Thresholds & Anti-Jitter Parameters (in [`frontend/src/components/TeamGrid.jsx`](file:///frontend/src/components/TeamGrid.jsx)):
+### Anime.js Scroll Parameters (in [`frontend/src/components/TeamGrid.jsx`](../frontend/src/components/TeamGrid.jsx)):
 ```javascript
-const JITTER_THRESHOLD = 24;       // Micro-scroll twitches (< 24px) are completely ignored
-const EDGE_SWITCH_THRESHOLD = 180; // Requires deliberate 180px scroll at the edge to switch sub-teams
-const SWITCH_COOLDOWN = 650;       // 650ms cooldown prevents accidental rapid team skipping
+const EXIT_THRESHOLD = 600;  // px of vertical runway after all cards are translated — prevents the section
+                              // snapping away too abruptly. Increase for a longer "hold" at the end.
+
+// Anime.js onScroll sync damping:
+sync: 0.18   // Lower = slower/smoother lerp; Higher = more 1:1 scroll tracking
 ```
-* **If switching sub-teams feels too stiff:** Decrease `EDGE_SWITCH_THRESHOLD` from `180` to `120`.
-* **If switching sub-teams happens too easily:** Increase `EDGE_SWITCH_THRESHOLD` from `180` to `220`.
-* **Scroll Snap Mode (in [`frontend/src/index.css`](file:///frontend/src/index.css)):**
-  `scroll-snap-type: y proximity;` ensures smooth, natural scrolling that does not violently seize the screen.
+* **If scroll feels too fast/jittery:** Decrease `sync` to `0.10`.
+* **If the section holds too long at end:** Decrease `EXIT_THRESHOLD` from `600` to `400`.
+* **If the section exits too quickly:** Increase `EXIT_THRESHOLD` from `600` to `800`.
 
 ---
 
 ## 10. Liquid Glass & Glassmorphism Design System
 
-All glassmorphism effects are defined in [`frontend/src/index.css`](file:///frontend/src/index.css):
+All glassmorphism effects are defined in [`frontend/src/index.css`](../frontend/src/index.css):
 
 | CSS Class | Visual Effect | Used On |
 | :--- | :--- | :--- |
@@ -501,6 +410,9 @@ All glassmorphism effects are defined in [`frontend/src/index.css`](file:///fron
 * **Card Backing:** `bg-black/60` / `bg-zinc-950/80`
 * **Borders:** `border-white/10` / `border-emerald-500/30`
 * **Typography:** Space Grotesk (Headings), JetBrains Mono (Badges & Code), Inter (Body)
+
+> [!NOTE]
+> The global `scroll-snap-type: y proximity` has been **removed** from `html` in `index.css`. Page-level scroll is now completely free and natural. Only the mobile team card track uses `snap-x snap-mandatory` for horizontal swipe snapping.
 
 ---
 
@@ -519,14 +431,14 @@ Django automatically normalizes `0.0.0.0` to `0.0.0.0:8000` and displays:
   > On your Wi-Fi/LAN:  http://192.168.x.x:8000/
 ```
 * **Opening on Phone/Tablet:** Connect to the same Wi-Fi and open `http://<your-lan-ip>:8000/`.
-* **Auto-Reload:** Enabled automatically via `django-browser-reload`. Any edit to `clubData.js` immediately refreshes all connected devices without restarting the server!
+* **Auto-Reload:** Enabled automatically via `django-browser-reload`. Any edit to `clubData.js` immediately refreshes all connected devices!
 
 ### Compiling React Frontend (`buildfrontend`)
-Whenever you edit React JSX components (`frontend/src/components/*.jsx`) or Tailwind styles (`frontend/src/index.css`), compile the bundles into `frontend/dist/` with:
+Whenever you edit React JSX components (`frontend/src/components/*.jsx`) or Tailwind styles (`frontend/src/index.css`), compile the bundles with:
 ```bash
 python manage.py buildfrontend
 ```
-This runs Vite inside `frontend/` and updates the compiled bundles in ~3 seconds. Once finished, refresh your browser to see your UI updates!
+This runs Vite inside `frontend/` and updates `frontend/dist/` in ~3 seconds. Refresh your browser to see changes!
 
 ---
 
@@ -536,12 +448,12 @@ The repository is configured for seamless deployment on [Vercel](https://vercel.
 
 #### How Vercel Deployment Works:
 1. **`vercel.json`:** Defines dual build targets:
-   - `@vercel/python` compiles `portal_backend/wsgi.py` (and `api/index.py`) into high-speed serverless functions handling `/api/*` and `/admin/*`.
-   - `@vercel/static-build` builds `frontend/package.json` into static assets deployed globally across Vercel's Edge CDN.
-2. **SPA Routing:** Non-API requests (`/`, `/team/*`) automatically route to `index.html` via Vercel Edge rewrites.
+   - `@vercel/python` compiles `portal_backend/wsgi.py` (and `api/index.py`) into serverless functions handling `/api/*` and `/admin/*`.
+   - `@vercel/static-build` builds `frontend/package.json` into static assets on Vercel's Edge CDN.
+2. **SPA Routing:** Non-API requests (`/`, `/team/*`) route to `index.html` via Vercel Edge rewrites.
 3. **Environment Detection:** When `VERCEL` is detected:
    - Live auto-reload is turned off automatically.
-   - SQLite database is safely initialized in `/tmp/db.sqlite3` to comply with serverless read-only filesystems.
+   - SQLite database is initialized in `/tmp/db.sqlite3`.
    - All events and members are served dynamically from `frontend/src/data/clubData.js`.
 
 #### Steps to Deploy:
@@ -552,9 +464,9 @@ The repository is configured for seamless deployment on [Vercel](https://vercel.
 2. Log in to [Vercel Dashboard](https://vercel.com/).
 3. Click **Add New...** -> **Project** and select `Voyager-Coding-Club-Website`.
 4. (Optional) Set Environment Variables:
-   - `DJANGO_DEBUG`: `False` (defaults to False on Vercel)
+   - `DJANGO_DEBUG`: `False`
    - `SECRET_KEY`: Enter a random secret key for production
-5. Click **Deploy**. Vercel will build and assign a live URL (e.g., `https://voyager-coding-club-website.vercel.app`).
+5. Click **Deploy**.
 
 ---
 
@@ -562,15 +474,32 @@ The repository is configured for seamless deployment on [Vercel](https://vercel.
 
 ```
 frontend/public/assets/
-├── Logo_Cube.png              # Primary 3D Voyager Binary Emblem
-├── id-cards/
-│   ├── 1.png                  # ID Card holographic render 1
-│   ├── 2.png                  # ID Card holographic render 2
-│   └── ...                    # Additional card artwork renders
-└── members/
-    ├── purushottam-kumar.png   # Transparent cutout portrait
-    ├── nilesh-singh.png        # Transparent cutout portrait
-    ├── pratyush-kumar-singh.png# Transparent cutout portrait
-    └── ...                     # Cutouts for all active members
+├── Logo_Cube.png                           # Primary 3D Voyager Binary Emblem
+└── team/
+    ├── id-card/                            # Holographic ID card renders (WebP)
+    │   ├── purushottam-kumar.webp
+    │   ├── nilesh-singh.webp
+    │   ├── adarsh-pandey.webp
+    │   ├── akash.webp
+    │   ├── ayush-jha.webp
+    │   ├── bhavya-singh.webp
+    │   ├── chaitanya-mathur.webp
+    │   ├── devender-parmar.webp
+    │   ├── harsh.webp
+    │   ├── kartikey-sharma.webp
+    │   ├── karuna-pradhan.webp
+    │   ├── pratyush-kumar-singh.webp
+    │   ├── rauneet-singh.webp
+    │   └── raza-masud.webp
+    └── bg-removed/                         # Cutout portraits with transparent BG (WebP)
+        ├── purushottam-kumar.webp
+        ├── nilesh-singh.webp
+        └── ... (all 14 members)
 ```
-To update an asset, replace the file with an image of the identical filename, or update the corresponding path in [`frontend/src/data/clubData.js`](file:///frontend/src/data/clubData.js).
+
+> [!IMPORTANT]
+> **Member image paths in `clubData.js`:**
+> - ID Card background: `cardImage: "/assets/team/id-card/<slug>.webp"`
+> - Cutout portrait: `photoUrl: "/assets/team/bg-removed/<slug>.webp"`
+>
+> The old `assets/id-cards/<number>.png` and `assets/members/<slug>.png` paths are **no longer valid** (those directories have been deleted).

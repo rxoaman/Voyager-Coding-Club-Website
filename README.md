@@ -19,12 +19,14 @@ A complete, production-ready implementation of the **Voyager Coding Club Web Por
    - Allows seamless consumption from any frontend dev server or external client.
 5. **Pre-Seeded Database:**
    - Included management command `python manage.py seed_portal_data` seeds all 14 core members and 4 events into SQLite instantly.
+6. **Local WebP Team Assets:**
+   - All 14 member photos (background-removed cutouts + holographic ID card renders) are stored locally as optimized WebP images in `frontend/public/assets/team/`. No external CDN or Google Drive dependencies.
 
 ---
 
 ## ⚡ How to Run the Django Portal
 
-From the `voyager-porta-django/` directory:
+From the `voyager-portal-django/` directory:
 
 ```bash
 # 1. Install dependencies (Django only)
@@ -56,7 +58,7 @@ python manage.py runserver 8000
 ## 📁 Directory Structure
 
 ```
-voyager-porta-django/
+voyager-portal-django/
 ├── manage.py                           <-- Django CLI
 ├── requirements.txt                    <-- Python dependencies
 ├── db.sqlite3                          <-- Pre-seeded SQLite database
@@ -79,14 +81,44 @@ voyager-porta-django/
 │           └── seed_portal_data.py     <-- Pre-populates all 14 core members & events
 │
 ├── docs/                               <-- Maintainer documentation
-│   ├── maintainer.md
-│   └── MAINTAINER_GUIDE.md
+│   └── maintainer.md                   <-- Master guide: how to edit every element
 │
-└── frontend/                           <-- React Frontend
+└── frontend/                           <-- React Frontend (Vite + React 18)
     ├── dist/                           <-- Pre-built bundle served by Django
-    ├── public/assets/                  <-- Official Logo, ID cards, Member cutouts
-    └── src/                            <-- Source code (Vite + React)
+    ├── public/
+    │   └── assets/
+    │       ├── Logo_Cube.png           <-- Primary 3D Voyager emblem
+    │       └── team/
+    │           ├── id-card/            <-- Holographic ID card renders (WebP, 14 members)
+    │           └── bg-removed/         <-- Transparent cutout portraits (WebP, 14 members)
+    └── src/                            <-- Source code
+        ├── components/
+        │   ├── TeamGrid.jsx            <-- Single-container horizontal scroll team section
+        │   ├── EventsGrid.jsx          <-- Events section
+        │   ├── IdCard.jsx              <-- Member ID card component
+        │   ├── Navbar.jsx
+        │   ├── HeroScroll.jsx
+        │   ├── AboutSection.jsx
+        │   └── Footer.jsx
+        ├── data/
+        │   └── clubData.js             <-- ⭐ Single source of truth for all club data
+        └── pages/
+            ├── Home.jsx
+            └── MemberDetailPage.jsx
 ```
+
+---
+
+## 🎨 Team Members Section — Single Container Horizontal Scroll
+
+The team section uses a **single unified glass container** for all 4 sub-teams (14 total members):
+
+- **Desktop:** As you scroll **down** the page, all member cards translate **horizontally** inside the container powered by Anime.js v4 `onScroll`. When all cards have been seen, a 600px exit buffer holds the section before releasing normal page scroll.
+- **Mobile:** Swipe **horizontally** directly on the card track to browse teams. `snap-x` keeps cards crisp.
+- **Team tabs** at the top of the container let you jump directly to any team's cards.
+- **Progress bar** at the bottom shows `XX% SEEN` as you advance through all teams.
+
+> **Note:** `scroll-snap-type: y proximity` has been removed from the global page level — this was causing the footer to be inaccessible. Only the mobile card track uses `snap-x snap-mandatory`.
 
 ---
 
@@ -96,11 +128,11 @@ If you wish to edit the React frontend UI directly while using Django as your ba
 
 ```bash
 # Terminal 1: Run Django Backend
-cd voyager-porta-django
+cd voyager-portal-django
 python manage.py runserver 8000
 
 # Terminal 2: Run Vite Dev Server (uses proxy to Django)
-cd voyager-porta-django/frontend
+cd voyager-portal-django/frontend
 npm run dev
 ```
 
@@ -109,3 +141,23 @@ When finished editing, rebuild the bundle:
 npm run build
 ```
 Django will immediately serve your updated React build at `http://127.0.0.1:8000/`!
+
+---
+
+## 📸 Asset Management
+
+All team member images are stored locally as optimized **WebP** files:
+
+| Path | Contents |
+|------|----------|
+| `frontend/public/assets/team/id-card/` | Holographic ID card renders (one per member, `<slug>.webp`) |
+| `frontend/public/assets/team/bg-removed/` | Transparent cutout portraits (one per member, `<slug>.webp`) |
+| `frontend/public/assets/Logo_Cube.png` | 3D Voyager emblem used in Navbar & Footer |
+
+**Image paths in `clubData.js`:**
+```javascript
+cardImage: "/assets/team/id-card/<member-slug>.webp"   // ID card background
+photoUrl:  "/assets/team/bg-removed/<member-slug>.webp" // Portrait cutout
+```
+
+> For detailed instructions on editing any part of the site, see [`docs/maintainer.md`](docs/maintainer.md).
