@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect, useCallback } from 'react';
+import React, { useRef, useState, useEffect, useCallback, useMemo } from 'react';
 import { ChevronLeft, ChevronRight, Users, Search, ArrowRight, ArrowLeft } from 'lucide-react';
 import { onScroll } from 'animejs';
 import IdCard from './IdCard';
@@ -23,11 +23,13 @@ export default function TeamGrid({ members = [], subTeams = [] }) {
   const activeTeamIndexRef = useRef(activeTeamIndex);
   activeTeamIndexRef.current = activeTeamIndex;
 
-  // The 4 core leadership teams strictly ordered
-  const coreTeamIds = ['technical', 'management', 'social-media', 'design'];
-  const orderedTeams = coreTeamIds
-    .map((id) => subTeams.find((t) => t.id === id))
-    .filter(Boolean);
+  // The 4 core leadership teams strictly ordered (memoized to keep stable reference)
+  const orderedTeams = useMemo(() => {
+    const coreTeamIds = ['technical', 'management', 'social-media', 'design'];
+    return coreTeamIds
+      .map((id) => subTeams.find((t) => t.id === id))
+      .filter(Boolean);
+  }, [subTeams]);
 
   const currentTeam = orderedTeams[activeTeamIndex] || orderedTeams[0] || { id: 'technical', name: 'Technical Team' };
 
@@ -65,6 +67,7 @@ export default function TeamGrid({ members = [], subTeams = [] }) {
   // Smooth scroll / jump directly to any team
   const scrollToTeam = useCallback((index) => {
     const boundedIdx = Math.max(0, Math.min(index, orderedTeams.length - 1));
+    const isTeamChange = boundedIdx !== activeTeamIndexRef.current;
     activeTeamIndexRef.current = boundedIdx;
     setActiveTeamIndex(boundedIdx);
 
@@ -78,7 +81,7 @@ export default function TeamGrid({ members = [], subTeams = [] }) {
       const sectionTop = sectionRef.current.getBoundingClientRect().top + window.scrollY;
       const targetScrollY = sectionTop + targetRatio * TOTAL_RUNWAY;
       window.scrollTo({ top: targetScrollY, behavior: 'smooth' });
-    } else if (trackRef.current) {
+    } else if (trackRef.current && isTeamChange) {
       trackRef.current.scrollTo({ left: 0, behavior: 'smooth' });
     }
   }, [orderedTeams, TOTAL_RUNWAY]);
@@ -143,21 +146,25 @@ export default function TeamGrid({ members = [], subTeams = [] }) {
 
   // Handle URL hash changes (e.g. #teams-design or #teams-management)
   useEffect(() => {
+    let timeoutId;
     const handleHash = () => {
       const hash = window.location.hash.toLowerCase();
       const match = hash.match(/^#(?:teams?)[-_]([a-z0-9_-]+)$/);
       if (match && match[1]) {
         const subId = match[1];
         const teamIdx = orderedTeams.findIndex((t) => t.id === subId);
-        if (teamIdx >= 0) {
-          setTimeout(() => scrollToTeam(teamIdx), 200);
+        if (teamIdx >= 0 && teamIdx !== activeTeamIndexRef.current) {
+          timeoutId = setTimeout(() => scrollToTeam(teamIdx), 100);
         }
       }
     };
 
     handleHash();
     window.addEventListener('hashchange', handleHash);
-    return () => window.removeEventListener('hashchange', handleHash);
+    return () => {
+      if (timeoutId) clearTimeout(timeoutId);
+      window.removeEventListener('hashchange', handleHash);
+    };
   }, [orderedTeams, scrollToTeam]);
 
   // Mobile passive horizontal scroll listener for the Seen/Progress bar
@@ -245,6 +252,9 @@ export default function TeamGrid({ members = [], subTeams = [] }) {
                       onClick={() => {
                         setSearchQuery('');
                         scrollToTeam(idx);
+                        if (!isDesktop && trackRef.current && idx === activeTeamIndex) {
+                          trackRef.current.scrollTo({ left: 0, behavior: 'smooth' });
+                        }
                       }}
                       className={`px-3.5 py-1.5 rounded-lg font-mono text-xs tracking-wider transition-all border cursor-pointer ${
                         isActive
@@ -348,9 +358,9 @@ export default function TeamGrid({ members = [], subTeams = [] }) {
             <div
               ref={trackRef}
               onScroll={handleMobileScroll}
-              className={`flex gap-5 will-change-transform pt-3 pb-2 items-center ${
+              className={`flex gap-5 pt-3 pb-2 items-center ${
                 isDesktop
-                  ? 'w-max pl-1 sm:pl-2'
+                  ? 'w-max pl-1 sm:pl-2 will-change-transform'
                   : 'w-full overflow-x-auto px-1 no-scrollbar touch-pan-x'
               }`}
               style={{
