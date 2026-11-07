@@ -173,79 +173,7 @@ export default function TeamGrid({ members = [], subTeams = [] }) {
     let touchStartY = 0;
     let startScrollLeft = 0;
 
-    const onTouchStart = (e) => {
-      if (e.touches.length !== 1) return;
-      touchStartX = e.touches[0].clientX;
-      touchStartY = e.touches[0].clientY;
-      startScrollLeft = trackEl.scrollLeft;
-    };
-
-    const onTouchMove = (e) => {
-      if (e.touches.length !== 1) return;
-      const maxScroll = trackEl.scrollWidth - trackEl.clientWidth;
-      if (maxScroll <= 4) return;
-
-      const curX = e.touches[0].clientX;
-      const curY = e.touches[0].clientY;
-      const diffX = touchStartX - curX;
-      const diffY = touchStartY - curY;
-
-      const primaryDiff = Math.abs(diffX) > Math.abs(diffY) ? diffX : diffY;
-
-      const atLeft = trackEl.scrollLeft <= 5;
-      const atRight = Math.ceil(trackEl.scrollLeft) >= maxScroll - 5;
-
-      // Boundary touch handling:
-      if (primaryDiff > 0 && atRight) {
-        if (activeTeamIndex < orderedTeams.length - 1 && primaryDiff > 70 && !isSwitching) {
-          isSwitching = true;
-          setActiveTeamIndex((prev) => Math.min(prev + 1, orderedTeams.length - 1));
-          setTimeout(() => {
-            if (trackEl) trackEl.scrollLeft = 0;
-            isSwitching = false;
-          }, 80);
-        }
-        return;
-      }
-
-      if (primaryDiff < 0 && atLeft) {
-        if (activeTeamIndex > 0 && primaryDiff < -70 && !isSwitching) {
-          isSwitching = true;
-          setActiveTeamIndex((prev) => Math.max(prev - 1, 0));
-          setTimeout(() => {
-            if (trackEl) trackEl.scrollLeft = trackEl.scrollWidth;
-            isSwitching = false;
-          }, 80);
-        }
-        return;
-      }
-
-      // Convert vertical/horizontal touch drag to horizontal card translation
-      if (Math.abs(primaryDiff) > 5) {
-        e.preventDefault();
-        trackEl.scrollLeft = startScrollLeft + primaryDiff;
-      }
-    };
-
-    const onTouchEnd = () => {
-      const cardWidth = window.innerWidth < 640 ? 280 : 330;
-      const targetScroll = Math.round(trackEl.scrollLeft / cardWidth) * cardWidth;
-      const maxScroll = trackEl.scrollWidth - trackEl.clientWidth;
-      const bounded = Math.max(0, Math.min(targetScroll, maxScroll));
-      if (animeTeamRef.current) animeTeamRef.current.pause();
-      animeTeamRef.current = anime({
-        targets: trackEl,
-        scrollLeft: bounded,
-        duration: 350,
-        easing: 'easeOutQuad',
-        update: updateScrollProgress,
-      });
-    };
-
     trackEl.addEventListener('wheel', onWheel, { passive: false });
-    trackEl.addEventListener('touchstart', onTouchStart, { passive: true });
-    trackEl.addEventListener('touchmove', onTouchMove, { passive: false });
-    trackEl.addEventListener('touchend', onTouchEnd, { passive: true });
     trackEl.addEventListener('scroll', updateScrollProgress, { passive: true });
     window.addEventListener('resize', updateScrollProgress, { passive: true });
 
@@ -254,9 +182,6 @@ export default function TeamGrid({ members = [], subTeams = [] }) {
     return () => {
       cancelAnimationFrame(rafId);
       trackEl.removeEventListener('wheel', onWheel);
-      trackEl.removeEventListener('touchstart', onTouchStart);
-      trackEl.removeEventListener('touchmove', onTouchMove);
-      trackEl.removeEventListener('touchend', onTouchEnd);
       trackEl.removeEventListener('scroll', updateScrollProgress);
       window.removeEventListener('resize', updateScrollProgress);
     };
@@ -270,22 +195,21 @@ export default function TeamGrid({ members = [], subTeams = [] }) {
     requestAnimationFrame(updateScrollProgress);
   };
 
-  const animeTeamRef = useRef(null);
+  const handlePrevTeam = () => {
+    setActiveTeamIndex((prev) => {
+      const nextIdx = prev > 0 ? prev - 1 : orderedTeams.length - 1;
+      if (trackRef.current) trackRef.current.scrollLeft = 0;
+      requestAnimationFrame(updateScrollProgress);
+      return nextIdx;
+    });
+  };
 
-  const scrollRow = (direction) => {
-    const el = trackRef.current;
-    if (!el) return;
-    const cardWidth = window.innerWidth < 640 ? 280 : 330;
-    const offset = direction === 'left' ? -cardWidth : cardWidth;
-    const maxScroll = el.scrollWidth - el.clientWidth;
-    const target = Math.max(0, Math.min(el.scrollLeft + offset, maxScroll));
-    if (animeTeamRef.current) animeTeamRef.current.pause();
-    animeTeamRef.current = anime({
-      targets: el,
-      scrollLeft: target,
-      duration: 400,
-      easing: 'easeOutCubic',
-      update: updateScrollProgress,
+  const handleNextTeam = () => {
+    setActiveTeamIndex((prev) => {
+      const nextIdx = prev < orderedTeams.length - 1 ? prev + 1 : 0;
+      if (trackRef.current) trackRef.current.scrollLeft = 0;
+      requestAnimationFrame(updateScrollProgress);
+      return nextIdx;
     });
   };
 
@@ -357,16 +281,20 @@ export default function TeamGrid({ members = [], subTeams = [] }) {
               </span>
               <div className="flex items-center gap-1">
                 <button
-                  onClick={() => scrollRow('left')}
-                  className="p-1.5 rounded-lg bg-zinc-900 border border-white/10 text-zinc-300 hover:text-white hover:bg-zinc-800 transition-colors"
-                  aria-label="Scroll left"
+                  type="button"
+                  onClick={handlePrevTeam}
+                  className="p-1.5 rounded-lg bg-zinc-900 border border-white/10 text-zinc-300 hover:text-white hover:bg-zinc-800 transition-colors cursor-pointer"
+                  aria-label="Previous Team"
+                  title="Previous Team"
                 >
                   <ChevronLeft className="w-4 h-4" />
                 </button>
                 <button
-                  onClick={() => scrollRow('right')}
-                  className="p-1.5 rounded-lg bg-zinc-900 border border-white/10 text-zinc-300 hover:text-white hover:bg-zinc-800 transition-colors"
-                  aria-label="Scroll right"
+                  type="button"
+                  onClick={handleNextTeam}
+                  className="p-1.5 rounded-lg bg-zinc-900 border border-white/10 text-zinc-300 hover:text-white hover:bg-zinc-800 transition-colors cursor-pointer"
+                  aria-label="Next Team"
+                  title="Next Team"
                 >
                   <ChevronRight className="w-4 h-4" />
                 </button>
@@ -407,7 +335,7 @@ export default function TeamGrid({ members = [], subTeams = [] }) {
         {currentMembers.length > 0 ? (
           <div
             ref={trackRef}
-            className="flex gap-4 sm:gap-6 overflow-x-auto py-3 px-1 sm:px-6 md:px-8 no-scrollbar scroll-pl-1 sm:scroll-pl-6 md:scroll-pl-8"
+            className="flex gap-4 sm:gap-6 overflow-x-auto py-3 px-1 sm:px-6 md:px-8 no-scrollbar snap-x snap-mandatory scroll-smooth touch-pan-x scroll-pl-1 sm:scroll-pl-6 md:scroll-pl-8" style={{ WebkitOverflowScrolling: "touch" }}
           >
             {currentMembers.map((member) => (
               <IdCard key={member.id} member={member} />

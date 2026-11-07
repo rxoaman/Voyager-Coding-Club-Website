@@ -3,12 +3,13 @@ import anime from 'animejs';
 /**
  * Scroll-linked flight animation of the large hero Voyager emblem
  * into the fixed navbar target container on the top-left.
+ * Operates smoothly across both desktop and mobile devices.
  */
 export function initHeroScrollAnimation({
   heroLogoRef,
   navLogoTargetRef,
   heroTextRef,
-  scrollThreshold = 450
+  scrollThreshold = 420
 }) {
   if (!heroLogoRef || !heroTextRef || !navLogoTargetRef) return () => {};
 
@@ -17,26 +18,6 @@ export function initHeroScrollAnimation({
   const updateFlight = () => {
     try {
       const scrollY = window.scrollY || window.pageYOffset || 0;
-
-      // On mobile screens (< 768px), keep hero fully visible without empty gap dissolves
-      if (window.innerWidth < 768) {
-        heroLogoRef.style.transform = 'none';
-        heroLogoRef.style.opacity = '1';
-        heroTextRef.style.opacity = '1';
-        heroTextRef.style.transform = 'none';
-        if (navLogoTargetRef) {
-          if (scrollY > 150) {
-            navLogoTargetRef.style.opacity = '1';
-            navLogoTargetRef.style.transform = 'scale(1)';
-          } else {
-            navLogoTargetRef.style.opacity = '0';
-            navLogoTargetRef.style.transform = 'scale(0.8)';
-          }
-        }
-        ticking = false;
-        return;
-      }
-
       const progress = Math.min(Math.max(scrollY / scrollThreshold, 0), 1);
 
       // Use parent container for stable, untransformed coordinates
@@ -49,30 +30,31 @@ export function initHeroScrollAnimation({
         const deltaX = (targetRect.left + targetRect.width / 2) - (heroContainerRect.left + heroContainerRect.width / 2);
         const deltaY = (targetRect.top + targetRect.height / 2) - (heroContainerRect.top + heroContainerRect.height / 2);
 
-        const targetScale = Math.min(targetRect.width / Math.max(heroContainerRect.width, 1), 0.3);
+        const targetScale = Math.min(targetRect.width / Math.max(heroContainerRect.width, 1), 0.35);
         const scale = 1 - (1 - targetScale) * progress;
         const translateX = deltaX * progress;
         const translateY = deltaY * progress;
-        const opacity = progress >= 0.95 ? 0 : 1;
+        const opacity = progress >= 0.96 ? 0 : 1;
 
         // Direct high-performance GPU transform
-        heroLogoRef.style.transform = `translate3d(${translateX}px, ${translateY}px, 0) scale(${scale})`;
+        heroLogoRef.style.transform = `translate3d(${translateX.toFixed(1)}px, ${translateY.toFixed(1)}px, 0) scale(${scale.toFixed(3)})`;
         heroLogoRef.style.opacity = `${opacity}`;
       }
 
-      // Dissolve text on right side
+      // Parallax text without creating phantom voids on mobile
       if (heroTextRef) {
-        const textOpacity = Math.max(1 - progress * 1.3, 0);
-        const textTranslateY = -progress * 40;
-        const textScale = 1 - progress * 0.04;
+        const textTranslateY = -progress * 25;
+        // Keep text readable: desktop gently dissolves, mobile maintains visibility
+        const minOpacity = window.innerWidth < 768 ? 0.35 : 0;
+        const textOpacity = Math.max(1 - progress * 1.05, minOpacity);
 
         heroTextRef.style.opacity = `${textOpacity}`;
-        heroTextRef.style.transform = `translate3d(0, ${textTranslateY}px, 0) scale(${textScale})`;
+        heroTextRef.style.transform = `translate3d(0, ${textTranslateY.toFixed(1)}px, 0)`;
       }
 
       // Seamless reveal of navbar target logo
       if (navLogoTargetRef) {
-        if (progress >= 0.88) {
+        if (progress >= 0.82) {
           navLogoTargetRef.style.opacity = '1';
           navLogoTargetRef.style.transform = 'scale(1)';
         } else {
@@ -96,7 +78,7 @@ export function initHeroScrollAnimation({
 
   window.addEventListener('scroll', onScroll, { passive: true });
   window.addEventListener('resize', onScroll, { passive: true });
-  
+
   // Initial compute
   updateFlight();
 

@@ -79,13 +79,13 @@ export default function EventsGrid({ events = [] }) {
       animeTimelineRef.current = anime({
         targets: tEl,
         scrollLeft: safeLeft,
-        duration: 400,
+        duration: 380,
         easing: 'easeOutCubic',
       });
     }
   }, []);
 
-  // Smoothly scroll to a specific event card and automatically synchronize the timeline line
+  // Smoothly scroll to a specific event card and automatically center its timeline node
   const scrollToEvent = useCallback((index) => {
     const cEl = trackRef.current;
     if (!cEl) return;
@@ -101,7 +101,7 @@ export default function EventsGrid({ events = [] }) {
       animeCardRef.current = anime({
         targets: cEl,
         scrollLeft: targetLeft,
-        duration: 450,
+        duration: 400,
         easing: 'easeOutCubic',
       });
     }
@@ -112,150 +112,82 @@ export default function EventsGrid({ events = [] }) {
     scrollToEvent(nextIndex);
   };
 
-  // Geek Room style scroll interaction with Anime.js:
-  // Both vertical and horizontal scroll/touch gestures drive the cards and timeline simultaneously
+  // Scroll and gesture interactions:
+  // 1. Touchscreen: Native 120Hz smooth momentum hardware scrolling (ZERO jitter)
+  // 2. Trackpad / Wheel: Smooth horizontal conversion
+  // 3. Throttled RAF updates active index and synchronizes the timeline without lag
   useEffect(() => {
     const el = trackRef.current;
     if (!el) return;
 
-    let isScrollingFromAnime = false;
+    let isAnimeActive = false;
+    let scrollRafId = null;
 
-    // Detect card index from manual scroll
-    const onScroll = () => {
-      if (isScrollingFromAnime) return;
-      const cardWidth = window.innerWidth < 640 ? 320 : 380;
-      const index = Math.round(el.scrollLeft / cardWidth);
-      const bounded = Math.min(Math.max(index, 0), filteredEvents.length - 1);
-      if (bounded !== activeEventIndex) {
-        setActiveEventIndex(bounded);
-        syncTimelineToActive(bounded);
-      }
+    // Passive throttled scroll handler using RAF for fluid tracking
+    const handleScroll = () => {
+      if (isAnimeActive) return;
+      cancelAnimationFrame(scrollRafId);
+      scrollRafId = requestAnimationFrame(() => {
+        const cardWidth = window.innerWidth < 640 ? 320 : 380;
+        const index = Math.round(el.scrollLeft / cardWidth);
+        const bounded = Math.min(Math.max(index, 0), filteredEvents.length - 1);
+        if (bounded !== activeEventIndex) {
+          setActiveEventIndex(bounded);
+          syncTimelineToActive(bounded);
+        }
+      });
     };
 
-    // 1. Wheel handling (Mouse wheel and Trackpad)
-    let wheelTimeout;
+    // Wheel handling for desktop / trackpad
     const onWheel = (e) => {
       const maxScroll = el.scrollWidth - el.clientWidth;
       if (maxScroll <= 4) return;
 
-      // Primary delta from vertical or horizontal wheel
       const primaryDelta = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
       if (Math.abs(primaryDelta) < 3) return;
 
-      const atLeft = el.scrollLeft <= 4;
-      const atRight = Math.ceil(el.scrollLeft) >= maxScroll - 4;
+      const atLeft = el.scrollLeft <= 5;
+      const atRight = Math.ceil(el.scrollLeft) >= maxScroll - 5;
 
-      // When reaching edges, release to standard vertical page scroll
+      // Allow natural vertical page scroll at carousel boundaries
       if ((primaryDelta > 0 && atRight) || (primaryDelta < 0 && atLeft)) {
         return;
       }
 
-      // Convert vertical/horizontal scroll into horizontal movement
       e.preventDefault();
-
-      if (animeCardRef.current) animeCardRef.current.pause();
 
       const isTrackpad = e.deltaMode === 0 && Math.abs(primaryDelta) < 60;
       if (isTrackpad) {
         el.scrollLeft += primaryDelta;
-        const cardWidth = window.innerWidth < 640 ? 320 : 380;
-        const index = Math.min(Math.max(Math.round(el.scrollLeft / cardWidth), 0), filteredEvents.length - 1);
-        setActiveEventIndex(index);
-        syncTimelineToActive(index);
       } else {
-        const targetScroll = Math.max(0, Math.min(el.scrollLeft + primaryDelta * 1.6, maxScroll));
-        isScrollingFromAnime = true;
+        const targetScroll = Math.max(0, Math.min(el.scrollLeft + primaryDelta * 1.5, maxScroll));
+        isAnimeActive = true;
+        if (animeCardRef.current) animeCardRef.current.pause();
         animeCardRef.current = anime({
           targets: el,
           scrollLeft: targetScroll,
-          duration: 380,
+          duration: 350,
           easing: 'easeOutQuad',
           complete: () => {
-            isScrollingFromAnime = false;
+            isAnimeActive = false;
             const cardWidth = window.innerWidth < 640 ? 320 : 380;
-            const index = Math.min(Math.max(Math.round(el.scrollLeft / cardWidth), 0), filteredEvents.length - 1);
-            setActiveEventIndex(index);
-            syncTimelineToActive(index);
+            const idx = Math.min(Math.max(Math.round(el.scrollLeft / cardWidth), 0), filteredEvents.length - 1);
+            setActiveEventIndex(idx);
+            syncTimelineToActive(idx);
           }
         });
       }
     };
 
-    // 2. Touch handling on smartphones
-    let touchStartX = 0;
-    let touchStartY = 0;
-    let startScrollLeft = 0;
-    let isTouchActive = false;
-
-    const onTouchStart = (e) => {
-      if (e.touches.length !== 1) return;
-      if (animeCardRef.current) animeCardRef.current.pause();
-      touchStartX = e.touches[0].clientX;
-      touchStartY = e.touches[0].clientY;
-      startScrollLeft = el.scrollLeft;
-      isTouchActive = true;
-    };
-
-    const onTouchMove = (e) => {
-      if (!isTouchActive || e.touches.length !== 1) return;
-      const maxScroll = el.scrollWidth - el.clientWidth;
-      if (maxScroll <= 4) return;
-
-      const curX = e.touches[0].clientX;
-      const curY = e.touches[0].clientY;
-      const diffX = touchStartX - curX;
-      const diffY = touchStartY - curY;
-
-      // Both vertical and horizontal swipe gestures drive the card carousel
-      const primaryDiff = Math.abs(diffX) > Math.abs(diffY) ? diffX : diffY;
-
-      const atLeft = el.scrollLeft <= 4;
-      const atRight = Math.ceil(el.scrollLeft) >= maxScroll - 4;
-
-      // At boundaries, release preventDefault to allow smooth vertical page navigation
-      if ((primaryDiff > 0 && atRight) || (primaryDiff < 0 && atLeft)) {
-        return;
-      }
-
-      if (Math.abs(primaryDiff) > 6) {
-        e.preventDefault();
-        el.scrollLeft = startScrollLeft + primaryDiff;
-        const cardWidth = window.innerWidth < 640 ? 320 : 380;
-        const index = Math.min(Math.max(Math.round(el.scrollLeft / cardWidth), 0), filteredEvents.length - 1);
-        setActiveEventIndex(index);
-        syncTimelineToActive(index);
-      }
-    };
-
-    const onTouchEnd = () => {
-      if (!isTouchActive) return;
-      isTouchActive = false;
-      // Snap to nearest card smoothly using anime.js
-      const cardWidth = window.innerWidth < 640 ? 320 : 380;
-      const targetIndex = Math.min(Math.max(Math.round(el.scrollLeft / cardWidth), 0), filteredEvents.length - 1);
-      scrollToEvent(targetIndex);
-    };
-
+    el.addEventListener('scroll', handleScroll, { passive: true });
     el.addEventListener('wheel', onWheel, { passive: false });
-    el.addEventListener('touchstart', onTouchStart, { passive: true });
-    el.addEventListener('touchmove', onTouchMove, { passive: false });
-    el.addEventListener('touchend', onTouchEnd, { passive: true });
-    el.addEventListener('scroll', onScroll, { passive: true });
 
     return () => {
+      cancelAnimationFrame(scrollRafId);
+      el.removeEventListener('scroll', handleScroll);
       el.removeEventListener('wheel', onWheel);
-      el.removeEventListener('touchstart', onTouchStart);
-      el.removeEventListener('touchmove', onTouchMove);
-      el.removeEventListener('touchend', onTouchEnd);
-      el.removeEventListener('scroll', onScroll);
     };
-  }, [filteredEvents.length, activeEventIndex, scrollToEvent, syncTimelineToActive]);
-
-  // Calculate timeline laser progress percentage (0 to 100%)
-  const progressPercent = useMemo(() => {
-    if (filteredEvents.length <= 1) return 100;
-    return (activeEventIndex / (filteredEvents.length - 1)) * 100;
-  }, [activeEventIndex, filteredEvents.length]);
+  }, [filteredEvents.length, activeEventIndex, syncTimelineToActive]);
 
   return (
     <div
@@ -322,14 +254,14 @@ export default function EventsGrid({ events = [] }) {
           <div className="hidden sm:flex items-center gap-1.5">
             <button
               onClick={() => scroll('left')}
-              className="p-2 rounded-lg bg-zinc-900 border border-white/10 text-zinc-300 hover:text-white hover:bg-zinc-800 transition-colors"
+              className="p-2 rounded-lg bg-zinc-900 border border-white/10 text-zinc-300 hover:text-white hover:bg-zinc-800 transition-colors cursor-pointer"
               aria-label="Scroll events left"
             >
               <ChevronLeft className="w-4 h-4" />
             </button>
             <button
               onClick={() => scroll('right')}
-              className="p-2 rounded-lg bg-zinc-900 border border-white/10 text-zinc-300 hover:text-white hover:bg-zinc-800 transition-colors"
+              className="p-2 rounded-lg bg-zinc-900 border border-white/10 text-zinc-300 hover:text-white hover:bg-zinc-800 transition-colors cursor-pointer"
               aria-label="Scroll events right"
             >
               <ChevronRight className="w-4 h-4" />
@@ -339,7 +271,8 @@ export default function EventsGrid({ events = [] }) {
       </div>
 
       {/* SYNCHRONIZED TIMELINE ANIMATION:
-          Automatically scrolls & illuminates along with the event cards on vertical or horizontal scroll */}
+          Segmented connecting rails centered directly to the circles;
+          Laser progress bar terminates with pixel precision exactly on the active circle! */}
       {filteredEvents.length > 0 && (
         <div className="mb-6 relative">
           <div className="flex items-center justify-between text-xs font-mono text-zinc-400 mb-2.5 px-1">
@@ -357,82 +290,92 @@ export default function EventsGrid({ events = [] }) {
             </span>
           </div>
 
-          {/* Interactive timeline bar container - automatically centers active node via anime.js */}
+          {/* Interactive timeline bar container */}
           <div
             ref={timelineRef}
-            className="relative p-3.5 sm:p-4 rounded-2xl bg-zinc-950/70 border border-white/10 backdrop-blur-md overflow-x-auto no-scrollbar"
+            className="relative p-3.5 sm:p-5 rounded-2xl bg-zinc-950/80 border border-white/10 backdrop-blur-md overflow-x-auto no-scrollbar scroll-smooth"
           >
-            {/* Base timeline rail */}
-            <div className="absolute top-[38px] sm:top-[42px] left-6 right-6 h-[2px] bg-zinc-800/80 pointer-events-none rounded-full overflow-hidden">
-              {/* Anime.js synchronized progress laser bar */}
-              <div
-                className="h-full bg-gradient-to-r from-emerald-500 via-emerald-400 to-emerald-300 shadow-[0_0_10px_#00FF88] transition-all duration-400 ease-out"
-                style={{ width: `${progressPercent}%` }}
-              />
-            </div>
-
-            {/* Timeline event nodes */}
-            <div className="relative flex items-center justify-between min-w-[500px] sm:min-w-0 gap-3 sm:gap-6 z-10 px-1">
+            {/* The Unified Timeline Row with Segmented Connecting Rails */}
+            <div className="relative flex items-start min-w-[520px] sm:min-w-0 w-full px-2">
               {filteredEvents.map((ev, idx) => {
                 const isUpcoming = ev.status?.toLowerCase() === 'upcoming' || ev.status?.toLowerCase() === 'live';
                 const isCurrent = activeEventIndex === idx;
+                const isPassed = activeEventIndex >= idx;
+                const isLast = idx === filteredEvents.length - 1;
 
                 return (
-                  <button
-                    key={ev.id}
-                    type="button"
-                    data-timeline-node={idx}
-                    onClick={() => scrollToEvent(idx)}
-                    className="group flex-1 flex flex-col items-center text-center transition-all focus:outline-none cursor-pointer"
-                    title={`View ${ev.title} on timeline`}
-                  >
-                    {/* Event Date */}
-                    <span className={`font-mono text-[10px] sm:text-[11px] tracking-wider mb-1.5 transition-colors ${
-                      isUpcoming
-                        ? 'text-emerald-400 font-bold'
-                        : isCurrent
-                        ? 'text-zinc-200 font-medium'
-                        : 'text-zinc-400 group-hover:text-zinc-200'
-                    }`}>
-                      {ev.date}
-                    </span>
-
-                    {/* Timeline Node Point */}
-                    <div className="relative flex items-center justify-center my-0.5">
-                      {isUpcoming && (
-                        <span className="absolute -inset-1.5 rounded-full bg-emerald-500/30 animate-pulse pointer-events-none" />
-                      )}
-                      <div className={`w-4 h-4 rounded-full border-2 transition-all flex items-center justify-center ${
+                  <React.Fragment key={ev.id}>
+                    {/* Event Node Column */}
+                    <button
+                      type="button"
+                      data-timeline-node={idx}
+                      onClick={() => scrollToEvent(idx)}
+                      className="group flex flex-col items-center text-center focus:outline-none cursor-pointer shrink-0 z-10 w-28 sm:w-32"
+                      title={`View ${ev.title} on timeline`}
+                    >
+                      {/* 1. Date */}
+                      <span className={`font-mono text-[10px] sm:text-[11px] tracking-wider mb-2 transition-colors ${
                         isUpcoming
-                          ? 'bg-emerald-500 border-emerald-300 shadow-[0_0_12px_rgba(0,255,136,0.8)] scale-110'
+                          ? 'text-emerald-400 font-bold'
                           : isCurrent
-                          ? 'bg-emerald-400 border-white shadow-[0_0_8px_rgba(0,255,136,0.5)] scale-105'
-                          : 'bg-zinc-900 border-zinc-600 group-hover:border-emerald-400 group-hover:bg-zinc-800'
+                          ? 'text-zinc-100 font-semibold'
+                          : 'text-zinc-400 group-hover:text-zinc-200'
                       }`}>
-                        <div className={`w-1.5 h-1.5 rounded-full ${
-                          isUpcoming || isCurrent ? 'bg-black' : 'bg-zinc-500 group-hover:bg-emerald-400'
-                        }`} />
+                        {ev.date}
+                      </span>
+
+                      {/* 2. Node Circle (centered in a 20px box matching connecting rail height) */}
+                      <div className="relative flex items-center justify-center my-0.5 w-5 h-5">
+                        {isCurrent && (
+                          <span className="absolute -inset-1.5 rounded-full bg-emerald-500/35 animate-ping pointer-events-none" />
+                        )}
+                        <div className={`w-4 h-4 rounded-full border-2 transition-all flex items-center justify-center ${
+                          isCurrent
+                            ? 'bg-emerald-400 border-white shadow-[0_0_12px_rgba(0,255,136,0.9)] scale-125'
+                            : isPassed
+                            ? 'bg-emerald-500 border-emerald-300 shadow-[0_0_8px_rgba(0,255,136,0.6)]'
+                            : 'bg-zinc-900 border-zinc-700 group-hover:border-emerald-400 group-hover:bg-zinc-800'
+                        }`}>
+                          <div className={`w-1.5 h-1.5 rounded-full ${
+                            isCurrent || isPassed ? 'bg-black' : 'bg-zinc-600 group-hover:bg-emerald-400'
+                          }`} />
+                        </div>
                       </div>
-                    </div>
 
-                    {/* Title */}
-                    <span className={`font-display font-semibold text-xs mt-2 truncate max-w-[125px] sm:max-w-[150px] transition-colors ${
-                      isUpcoming ? 'text-white' : isCurrent ? 'text-emerald-400' : 'text-zinc-300 group-hover:text-emerald-400'
-                    }`}>
-                      {ev.title}
-                    </span>
+                      {/* 3. Title */}
+                      <span className={`font-display font-semibold text-xs mt-2 truncate w-full transition-colors ${
+                        isCurrent ? 'text-emerald-400 font-bold' : isUpcoming ? 'text-white' : 'text-zinc-300 group-hover:text-emerald-400'
+                      }`}>
+                        {ev.title}
+                      </span>
 
-                    {/* Category / Status Pill */}
-                    <span className={`font-mono text-[9px] uppercase px-1.5 py-0.5 rounded mt-1 border transition-colors ${
-                      isUpcoming
-                        ? 'bg-emerald-950/80 text-emerald-400 border-emerald-500/40'
-                        : isCurrent
-                        ? 'bg-zinc-900 text-emerald-400 border-emerald-500/30'
-                        : 'bg-zinc-900 text-zinc-400 border-white/5 group-hover:border-white/20'
-                    }`}>
-                      {isUpcoming ? 'UPCOMING' : ev.badge || 'COMPLETED'}
-                    </span>
-                  </button>
+                      {/* 4. Category / Status Pill */}
+                      <span className={`font-mono text-[9px] uppercase px-1.5 py-0.5 rounded mt-1 border transition-colors ${
+                        isUpcoming
+                          ? 'bg-emerald-950/80 text-emerald-400 border-emerald-500/40'
+                          : isCurrent
+                          ? 'bg-zinc-900 text-emerald-400 border-emerald-500/30 font-semibold'
+                          : 'bg-zinc-900 text-zinc-400 border-white/5 group-hover:border-white/20'
+                      }`}>
+                        {isUpcoming ? 'UPCOMING' : ev.badge || 'COMPLETED'}
+                      </span>
+                    </button>
+
+                    {/* Connecting Rail Segment between Circle idx and Circle idx + 1:
+                        Vertically aligned at exactly the same row, terminating exactly at the next circle! */}
+                    {!isLast && (
+                      <div className="flex-1 flex items-center self-start mt-[28px] sm:mt-[29px] h-5 min-w-[24px]">
+                        <div className="w-full h-[2.5px] bg-zinc-800/90 rounded-full overflow-hidden relative">
+                          <div
+                            className="h-full bg-gradient-to-r from-emerald-500 via-emerald-400 to-emerald-300 shadow-[0_0_8px_#00FF88] transition-all duration-500 ease-out"
+                            style={{
+                              width: activeEventIndex > idx ? '100%' : '0%',
+                            }}
+                          />
+                        </div>
+                      </div>
+                    )}
+                  </React.Fragment>
                 );
               })}
             </div>
@@ -440,10 +383,15 @@ export default function EventsGrid({ events = [] }) {
         </div>
       )}
 
-      {/* SINGLE HORIZONTAL ROW OF EVENT CARDS */}
+      {/* SINGLE HORIZONTAL ROW OF EVENT CARDS:
+          Silky-smooth native momentum touch scrolling with snap on mobile,
+          plus anime.js smooth controls on desktop */}
       <div
         ref={trackRef}
-        className="flex gap-6 overflow-x-auto py-3 px-1 no-scrollbar"
+        className="flex gap-6 overflow-x-auto py-3 px-1 no-scrollbar snap-x snap-mandatory scroll-smooth touch-pan-x"
+        style={{
+          WebkitOverflowScrolling: 'touch',
+        }}
       >
         {filteredEvents.map((event) => (
           <EventCard key={event.id} event={event} />
