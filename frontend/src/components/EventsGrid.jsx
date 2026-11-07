@@ -201,7 +201,7 @@ export default function EventsGrid({ events = [] }) {
     <section
       id="events"
       ref={sectionRef}
-      className="relative w-full text-slate-100"
+      className="relative w-full text-slate-100 snap-start scroll-mt-0"
       style={{
         // Desktop height provides vertical runway with 500px threshold hold; Mobile height is natural
         height: isDesktop

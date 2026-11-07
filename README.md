@@ -118,7 +118,7 @@ The team section uses a **single unified glass container** for all 4 sub-teams (
 - **Team tabs** at the top of the container let you jump directly to any team's cards.
 - **Progress bar** at the bottom shows `XX% SEEN` as you advance through all teams.
 
-> **Note:** `scroll-snap-type: y proximity` has been removed from the global page level — this was causing the footer to be inaccessible. Only the mobile card track uses `snap-x snap-mandatory`.
+> **Note:** Page-level scroll snapping uses `scroll-snap-type: y proximity` on `html` with `snap-start` on the Event, Team, and Footer containers. Snap has been removed from individual member cards so they scroll smoothly without jitter, and the footer is fully accessible at all times.
 
 ---
 

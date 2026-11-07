@@ -189,7 +189,7 @@ export default function TeamGrid({ members = [], subTeams = [] }) {
     <section
       id="team"
       ref={sectionRef}
-      className="relative w-full text-slate-100"
+      className="relative w-full text-slate-100 snap-start scroll-mt-0"
       style={{
         height: isDesktop ? `calc(100vh + ${TOTAL_RUNWAY}px)` : 'auto',
       }}
@@ -351,7 +351,7 @@ export default function TeamGrid({ members = [], subTeams = [] }) {
               className={`flex gap-5 will-change-transform pt-3 pb-2 items-center ${
                 isDesktop
                   ? 'w-max pl-1 sm:pl-2'
-                  : 'w-full overflow-x-auto px-1 no-scrollbar snap-x snap-mandatory touch-pan-x'
+                  : 'w-full overflow-x-auto px-1 no-scrollbar touch-pan-x'
               }`}
               style={{
                 WebkitOverflowScrolling: 'touch',
@@ -360,7 +360,7 @@ export default function TeamGrid({ members = [], subTeams = [] }) {
               {isSearching ? (
                 filteredSearchMembers.length > 0 ? (
                   filteredSearchMembers.map((member) => (
-                    <div key={member.id} className="shrink-0 snap-start">
+                    <div key={member.id} className="shrink-0">
                       <IdCard member={member} />
                     </div>
                   ))
@@ -371,7 +371,7 @@ export default function TeamGrid({ members = [], subTeams = [] }) {
                 )
               ) : currentMembers.length > 0 ? (
                 currentMembers.map((member) => (
-                  <div key={member.id} className="shrink-0 snap-start">
+                  <div key={member.id} className="shrink-0">
                     <IdCard member={member} />
                   </div>
                 ))

@@ -365,7 +365,7 @@ Change both `subTeam` and `subTeamId` on the member object:
 ### ID Card Sizing (in [`frontend/src/components/IdCard.jsx`](../frontend/src/components/IdCard.jsx)):
 ```jsx
 // Outer Badge Container:
-<div className="badge-container group cursor-pointer w-[285px] sm:w-[305px] shrink-0 snap-start select-none">
+<div className="badge-container group cursor-pointer w-[285px] sm:w-[305px] shrink-0 select-none">
 
 // Physical Card Body:
 <div className="id-card-badge liquid-glass-card p-4 sm:p-4.5 flex flex-col justify-between h-[435px] sm:h-[455px] relative">
@@ -412,7 +412,7 @@ All glassmorphism effects are defined in [`frontend/src/index.css`](../frontend/
 * **Typography:** Space Grotesk (Headings), JetBrains Mono (Badges & Code), Inter (Body)
 
 > [!NOTE]
-> The global `scroll-snap-type: y proximity` has been **removed** from `html` in `index.css`. Page-level scroll is now completely free and natural. Only the mobile team card track uses `snap-x snap-mandatory` for horizontal swipe snapping.
+> Page-level vertical scroll-snap is configured using `scroll-snap-type: y proximity` on `html`. The primary containers (`#hero`, `#events`, `#team`, and `#footer`) have `snap-start`, enabling smooth, natural docking when navigating between sections. Individual team member cards do NOT have snap applied (`snap-start` removed), allowing member cards to scroll freely and smoothly without jitter or snap-back. The footer retains `snap-start scroll-mt-8` with full margin clearance (`mt-12 sm:mt-16`), ensuring it is 100% accessible at all times without trapping the scroll.
 
 ---
 
