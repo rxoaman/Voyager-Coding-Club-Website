@@ -24,6 +24,7 @@ export default function HeroScroll({ navLogoTargetRef }) {
 
   return (
     <section
+      id="hero"
       ref={heroSectionRef}
       className="relative min-h-0 sm:min-h-screen flex items-center justify-center pt-20 sm:pt-24 pb-6 sm:pb-16 px-4 sm:px-6 lg:px-8 canvas-grid"
     >

@@ -71,6 +71,9 @@ export default function EventsGrid({ events = [] }) {
       // Distance needed to scroll all cards within the container
       const distance = Math.max(0, trackWidth - containerWidth + 48);
       setTravelDistance(distance);
+      if (distance <= 0 && trackRef.current) {
+        trackRef.current.style.transform = 'none';
+      }
     } else {
       setTravelDistance(0);
       if (trackRef.current) {
@@ -78,6 +81,42 @@ export default function EventsGrid({ events = [] }) {
       }
     }
   }, []);
+
+  // Mobile passive scroll listener to dynamically update active timeline marker as user scrolls horizontally
+  const handleMobileScroll = useCallback(() => {
+    const trackEl = trackRef.current;
+    if (!trackEl || isDesktop) return;
+
+    const children = trackEl.children;
+    if (!children || children.length === 0) return;
+
+    // Detect which event card is currently most visible/centered in the mobile viewport
+    const trackCenter = trackEl.scrollLeft + trackEl.clientWidth / 2;
+    let closestIndex = 0;
+    let minDistance = Infinity;
+
+    for (let i = 0; i < children.length; i++) {
+      const child = children[i];
+      const childCenter = child.offsetLeft + child.offsetWidth / 2;
+      const distance = Math.abs(trackCenter - childCenter);
+      if (distance < minDistance) {
+        minDistance = distance;
+        closestIndex = i;
+      }
+    }
+
+    setActiveEventIndex((prev) => (prev !== closestIndex ? closestIndex : prev));
+  }, [isDesktop]);
+
+  // Mobile: keep active timeline marker visible within horizontal timeline container
+  useEffect(() => {
+    if (!isDesktop && timelineRef.current) {
+      const activeNode = timelineRef.current.querySelector(`[data-timeline-node="${activeEventIndex}"]`);
+      if (activeNode) {
+        activeNode.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+      }
+    }
+  }, [activeEventIndex, isDesktop]);
 
   // Anime.js v4 onScroll: Pinned horizontal scroll
   useEffect(() => {
@@ -165,7 +204,11 @@ export default function EventsGrid({ events = [] }) {
       className="relative w-full text-slate-100"
       style={{
         // Desktop height provides vertical runway with 500px threshold hold; Mobile height is natural
-        height: isDesktop && travelDistance > 0 ? `calc(100vh + ${travelDistance + 500}px)` : 'auto',
+        height: isDesktop
+          ? travelDistance > 0
+            ? `calc(100vh + ${travelDistance + 500}px)`
+            : '100vh'
+          : 'auto',
       }}
     >
       {/* STICKY VIEWPORT: Pinned at top: 0 for 100vh on Desktop */}
@@ -173,14 +216,14 @@ export default function EventsGrid({ events = [] }) {
         ref={viewportRef}
         className={`w-full overflow-hidden ${
           isDesktop
-            ? 'sticky top-0 h-screen flex flex-col justify-center'
+            ? 'sticky top-0 min-h-screen flex flex-col justify-center pt-16 sm:pt-20 pb-4 overflow-hidden'
             : 'relative py-6 sm:py-8'
         }`}
       >
         <div className="max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8">
           
           {/* Outer Eyebrow */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-3 px-1 gap-2">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-2 sm:mb-2.5 px-1 gap-2">
             <div className="inline-flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-emerald-400" />
               <span className="font-mono text-xs uppercase tracking-widest text-zinc-400">
@@ -196,10 +239,10 @@ export default function EventsGrid({ events = [] }) {
           <div
             id="events-focus-card"
             ref={containerRef}
-            className="liquid-glass rounded-3xl p-4 sm:p-7 relative flex flex-col justify-between shadow-2xl overflow-hidden border border-white/10"
+            className="liquid-glass rounded-3xl p-4 sm:p-5 lg:p-6 relative flex flex-col justify-between shadow-2xl overflow-hidden border border-white/10"
           >
             {/* Header: Title + 3 Filter Tabs (ALL, LIVE, COMPLETED) + Stepper Arrows */}
-            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3.5 pb-4 border-b border-white/10">
+            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 pb-3 sm:pb-3.5 border-b border-white/10">
               <div>
                 <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-zinc-900 border border-white/10 mb-2">
                   <Calendar className="w-3.5 h-3.5 text-emerald-400" />
@@ -288,7 +331,7 @@ export default function EventsGrid({ events = [] }) {
             {/* SYNCHRONIZED TIMELINE BAR:
                 Encased inside container with connecting rails centered to circles */}
             {filteredEvents.length > 0 && (
-              <div className="my-4 relative">
+              <div className="my-2.5 sm:my-3.5 relative">
                 <div className="flex items-center justify-between text-xs font-mono text-zinc-400 mb-2 px-1">
                   <div className="flex items-center gap-2">
                     <span className="relative flex h-2 w-2">
@@ -307,7 +350,7 @@ export default function EventsGrid({ events = [] }) {
                 {/* Timeline Inner Bar */}
                 <div
                   ref={timelineRef}
-                  className="relative p-3.5 sm:p-4 rounded-2xl bg-zinc-950/70 border border-white/10 backdrop-blur-md overflow-x-auto no-scrollbar scroll-smooth"
+                  className="relative p-3 sm:p-3.5 rounded-2xl bg-zinc-950/70 border border-white/10 backdrop-blur-md overflow-x-auto no-scrollbar scroll-smooth"
                 >
                   <div className="relative flex items-start min-w-[500px] sm:min-w-0 w-full px-2">
                     {filteredEvents.map((ev, idx) => {
@@ -398,9 +441,10 @@ export default function EventsGrid({ events = [] }) {
             {/* EVENT CARDS TRACK: Contained neatly inside events-focus-card container */}
             <div
               ref={trackRef}
-              className={`flex gap-5 will-change-transform pt-2 pb-2 ${
+              onScroll={handleMobileScroll}
+              className={`flex gap-5 will-change-transform pt-1.5 pb-2 ${
                 isDesktop
-                  ? 'w-max pl-1 sm:pl-2'
+                  ? 'w-max pl-3 sm:pl-4 pr-3 sm:pr-4'
                   : 'w-full overflow-x-auto px-1 no-scrollbar snap-x snap-mandatory touch-pan-x'
               }`}
               style={{

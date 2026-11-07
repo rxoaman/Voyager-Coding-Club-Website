@@ -8,10 +8,10 @@ export default function EventCard({ event }) {
   const statusLabel = isLive ? 'LIVE NOW' : 'COMPLETED';
 
   return (
-    <article className="group liquid-glass-card rounded-2xl overflow-hidden flex flex-col justify-between w-[calc(90vw-2.5rem)] max-w-[340px] sm:max-w-none sm:w-[370px] shrink-0 snap-start select-none border border-white/10">
+    <article className="group liquid-glass-card rounded-2xl overflow-hidden flex flex-col justify-between w-[calc(90vw-2.5rem)] max-w-[340px] sm:max-w-none sm:w-[350px] lg:w-[370px] shrink-0 snap-start select-none border border-white/10">
       
       {/* Event banner */}
-      <div className="relative w-full h-44 sm:h-48 bg-black/60 overflow-hidden shrink-0">
+      <div className="relative w-full h-36 sm:h-40 lg:h-44 bg-black/60 overflow-hidden shrink-0">
         <ResilientImage
           src={event.imageUrl}
           alt={event.title}
@@ -46,8 +46,8 @@ export default function EventCard({ event }) {
       </div>
 
       {/* Content */}
-      <div className="p-4 sm:p-5 flex-1 flex flex-col justify-between">
-        <div className="space-y-2.5">
+      <div className="p-3.5 sm:p-4 lg:p-5 flex-1 flex flex-col justify-between">
+        <div className="space-y-2 sm:space-y-2.5">
           {/* Metadata: Date, Time and strictly KCCITM as venue */}
           <div className="flex items-center gap-3 text-xs font-mono text-zinc-400">
             <div className="flex items-center gap-1 text-emerald-400 font-semibold">
@@ -72,7 +72,7 @@ export default function EventCard({ event }) {
           </h3>
 
           {/* Description */}
-          <p className="font-sans text-xs sm:text-sm text-zinc-300 leading-relaxed line-clamp-3">
+          <p className="font-sans text-xs sm:text-sm text-zinc-300 leading-relaxed line-clamp-2 sm:line-clamp-3">
             {event.description}
           </p>
 

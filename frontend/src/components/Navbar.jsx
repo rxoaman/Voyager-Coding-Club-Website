@@ -20,16 +20,22 @@ export default function Navbar({ navLogoTargetRef }) {
   const navLinks = [
     { name: 'Home', path: '/', hash: '' },
     { name: 'Events', path: '/#events', hash: 'events' },
-    { name: 'Team', path: '/#team', hash: 'team' },
+    { name: 'Team', path: '/#teams', hash: 'teams' },
   ];
 
   const handleScrollTo = (hash) => {
     setMobileMenuOpen(false);
+    const newHash = hash ? '#' + hash : '';
+    const newUrl = window.location.pathname + newHash;
+    if (window.location.hash !== newHash) {
+      window.history.pushState(null, '', newUrl);
+    }
+
     if (!hash) {
       window.scrollTo({ top: 0, behavior: 'smooth' });
       return;
     }
-    const el = document.getElementById(hash);
+    const el = document.getElementById(hash) || (hash === 'teams' ? document.getElementById('team') : null);
     if (el) {
       el.scrollIntoView({ behavior: 'smooth' });
     }

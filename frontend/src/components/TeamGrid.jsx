@@ -162,6 +162,10 @@ export default function TeamGrid({ members = [], subTeams = [] }) {
     const targetTeam = orderedTeams[boundedIdx];
     if (!targetTeam) return;
 
+    if (window.location.hash.includes('team')) {
+      window.history.replaceState(null, '', `#teams-${targetTeam.id}`);
+    }
+
     const anchorEl = teamAnchorRefs.current[targetTeam.id];
     if (isDesktop && travelDistance > 0 && sectionRef.current) {
       const targetOffset = anchorEl ? anchorEl.offsetLeft : 0;
@@ -186,6 +190,25 @@ export default function TeamGrid({ members = [], subTeams = [] }) {
     scrollToTeam(nextIdx);
   };
 
+  // Handle subteam routing via URL hash (e.g., #teams-management or #teams-technical)
+  useEffect(() => {
+    const handleHash = () => {
+      const hash = window.location.hash.toLowerCase();
+      const match = hash.match(/^#(?:teams?)[-_]([a-z0-9_-]+)$/);
+      if (match && match[1]) {
+        const subId = match[1];
+        const teamIdx = orderedTeams.findIndex((t) => t.id === subId);
+        if (teamIdx >= 0) {
+          setTimeout(() => scrollToTeam(teamIdx), 200);
+        }
+      }
+    };
+
+    handleHash();
+    window.addEventListener('hashchange', handleHash);
+    return () => window.removeEventListener('hashchange', handleHash);
+  }, [orderedTeams, travelDistance, isDesktop]);
+
   return (
     <section
       id="team"
@@ -193,15 +216,21 @@ export default function TeamGrid({ members = [], subTeams = [] }) {
       className="relative w-full text-slate-100"
       style={{
         // Desktop height provides multi-team vertical runway with 600px exit buffer hold; Mobile height is natural
-        height: isDesktop && travelDistance > 0 ? `calc(100vh + ${travelDistance + EXIT_THRESHOLD}px)` : 'auto',
+        height: isDesktop
+          ? travelDistance > 0
+            ? `calc(100vh + ${travelDistance + EXIT_THRESHOLD}px)`
+            : '100vh'
+          : 'auto',
       }}
     >
+      {/* Anchors for both #teams and #team */}
+      <div id="teams" className="absolute -top-24 pointer-events-none" />
       {/* STICKY VIEWPORT: Pinned at top: 0 for 100vh on Desktop */}
       <div
         ref={viewportRef}
         className={`w-full overflow-hidden ${
           isDesktop
-            ? 'sticky top-0 h-screen flex flex-col justify-center'
+            ? 'sticky top-0 min-h-screen flex flex-col justify-center pt-16 sm:pt-20 pb-4 overflow-hidden'
             : 'relative py-6 sm:py-8'
         }`}
       >
@@ -336,7 +365,7 @@ export default function TeamGrid({ members = [], subTeams = [] }) {
               onScroll={handleMobileScroll}
               className={`flex gap-5 will-change-transform pt-2 pb-2 items-center ${
                 isDesktop
-                  ? 'w-max pl-1 sm:pl-2'
+                  ? 'w-max pl-3 sm:pl-4 pr-3 sm:pr-4'
                   : 'w-full overflow-x-auto px-1 no-scrollbar snap-x snap-mandatory touch-pan-x'
               }`}
               style={{
@@ -363,39 +392,11 @@ export default function TeamGrid({ members = [], subTeams = [] }) {
 
                   return (
                     <React.Fragment key={team.id}>
-                      {/* Department Anchor Card (Chapter Divider) for Teams after the first */}
-                      {teamIdx > 0 && (
-                        <div
-                          ref={(el) => (teamAnchorRefs.current[team.id] = el)}
-                          className="w-[260px] sm:w-[280px] shrink-0 h-[415px] sm:h-[430px] rounded-2xl border border-dashed border-emerald-500/30 bg-emerald-950/20 backdrop-blur-sm flex flex-col justify-between p-6 text-left select-none relative overflow-hidden group hover:border-emerald-500/60 transition-colors"
-                        >
-                          <div className="space-y-3">
-                            <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
-                              <Users className="w-5 h-5" />
-                            </div>
-                            <span className="inline-block font-mono text-[10px] uppercase tracking-widest text-emerald-400 font-bold bg-emerald-950/80 px-2 py-0.5 rounded border border-emerald-500/30">
-                              Department 0{teamIdx + 1}
-                            </span>
-                            <h3 className="font-display font-extrabold text-xl text-white">
-                              {team.name}
-                            </h3>
-                            <p className="font-mono text-xs text-zinc-400 leading-relaxed">
-                              {team.description}
-                            </p>
-                          </div>
-
-                          <div className="pt-4 border-t border-white/10 flex items-center justify-between font-mono text-xs text-emerald-400">
-                            <span>{teamMembers.length} members</span>
-                            <ArrowRight className="w-4 h-4 text-emerald-400 group-hover:translate-x-1 transition-transform" />
-                          </div>
-                        </div>
-                      )}
-
                       {/* Team Member Cards */}
                       {teamMembers.map((member, mIdx) => (
                         <div
                           key={member.id}
-                          ref={teamIdx === 0 && mIdx === 0 ? (el) => (teamAnchorRefs.current[team.id] = el) : null}
+                          ref={mIdx === 0 ? (el) => (teamAnchorRefs.current[team.id] = el) : null}
                           className="shrink-0"
                         >
                           <IdCard member={member} />

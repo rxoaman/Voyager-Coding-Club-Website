@@ -23,7 +23,7 @@ class ClubProfile(models.Model):
     tagline = models.CharField(max_length=200, default="Grow | Collaborate | Connect")
     motto = models.TextField(default="Student coding community of KCC Institute of Technology & Management.")
     logo = models.CharField(max_length=300, default="/assets/Logo_Cube.png")
-    card_back = models.CharField(max_length=300, default="/assets/id-cards/1.png")
+    card_back = models.CharField(max_length=300, default="/assets/team/id-card-back.webp")
     linkedin = models.URLField(default="https://www.linkedin.com/company/voyager-kccitm/")
     instagram = models.URLField(default="https://www.instagram.com/voyager.kccitm/")
     github = models.URLField(default="https://github.com/rxoaman/Voyager-s-Website")
@@ -116,7 +116,7 @@ class Member(models.Model):
             "badgeNumber": self.badge_number,
             "badgeId": self.badge_id,
             "cardImage": self.card_image,
-            "photoUrl": self.portrait_image or f"/assets/members/{self.slug}.png",
+            "photoUrl": self.portrait_image or f"/assets/team/bg-removed/{self.slug}.webp",
             "subTeam": self.sub_team.name,
             "subTeamId": self.sub_team.team_id,
             "designation": self.designation,
