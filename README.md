@@ -113,8 +113,8 @@ voyager-portal-django/
 
 The team section uses a **single unified glass container** for all 4 sub-teams (14 total members):
 
-- **Desktop:** As you scroll **down** the page, all member cards translate **horizontally** inside the container powered by Anime.js v4 `onScroll`. When all cards have been seen, a 600px exit buffer holds the section before releasing normal page scroll.
-- **Mobile:** Swipe **horizontally** directly on the card track to browse teams. `snap-x` keeps cards crisp.
+- **Desktop:** As you scroll **down** the page, only the active team's member cards are present in the container at a time (no divider cards). Member cards translate **horizontally** inside the container powered by Anime.js v4 `onScroll`. When a team ends, continuing to scroll advances smoothly to the next team (Technical → Management → Social Media → Design), dynamically popping each team's button in the top bar.
+- **Mobile:** Swipe **horizontally** directly on the card track; reaching the end advances to the next team in the same container. Team tabs and Prev/Next buttons also provide instant 1-tap switching.
 - **Team tabs** at the top of the container let you jump directly to any team's cards.
 - **Progress bar** at the bottom shows `XX% SEEN` as you advance through all teams.
 

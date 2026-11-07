@@ -184,8 +184,8 @@ Each event is an object in `export const EVENTS = [...]`:
 
 ### How the Scroll Works:
 The team section uses **ONE unified glass container** for all teams:
-- **Desktop (≥768px):** The section is `position: sticky` at the top of the viewport. As you **scroll down vertically**, all 14 member cards + team divider cards translate **horizontally** inside the container using Anime.js v4 `onScroll`. When you've scrolled through all teams (the track fully translates), a 600px exit buffer holds the section pinned before releasing the page scroll.
-- **Mobile (<768px):** The container behaves naturally in the page flow. Swipe **horizontally** on the card track to browse all teams sequentially. `snap-x snap-mandatory` keeps cards crisp on swipe.
+- **Desktop (≥768px):** The section is `position: sticky` at the top of the viewport. As you **scroll down vertically**, only the active team's member cards are present in the container at a time (no clutter, no divider cards). As you scroll through a team's cards, continuing to scroll advances smoothly to the next team (Technical → Management → Social Media → Design Team). In the top bar, each team's button pops active automatically—guaranteed to pop on Design Team during the final stage before releasing the page scroll.
+- **Mobile (<768px):** The container flows naturally in the page. Swipe **horizontally** on the card track to view members; swiping at the end advances to the next team in the same container. Team tabs and Prev/Next buttons also provide instant 1-tap switching.
 
 ### Header Elements:
 1. **Eyebrow Tag:** `CLUB LEADERSHIP DIRECTORY` (top-left of container)
@@ -381,15 +381,15 @@ Change both `subTeam` and `subTeamId` on the member object:
 
 ### Anime.js Scroll Parameters (in [`frontend/src/components/TeamGrid.jsx`](../frontend/src/components/TeamGrid.jsx)):
 ```javascript
-const EXIT_THRESHOLD = 600;  // px of vertical runway after all cards are translated — prevents the section
-                              // snapping away too abruptly. Increase for a longer "hold" at the end.
+const TOTAL_RUNWAY = 2200; // px of vertical runway across all 4 teams on desktop
+const SEG_BOUNDS = [0.0, 0.26, 0.52, 0.72]; // Team transition boundaries in scroll progress
 
 // Anime.js onScroll sync damping:
 sync: 0.18   // Lower = slower/smoother lerp; Higher = more 1:1 scroll tracking
 ```
 * **If scroll feels too fast/jittery:** Decrease `sync` to `0.10`.
-* **If the section holds too long at end:** Decrease `EXIT_THRESHOLD` from `600` to `400`.
-* **If the section exits too quickly:** Increase `EXIT_THRESHOLD` from `600` to `800`.
+* **If the team section runway feels too long:** Decrease `TOTAL_RUNWAY` from `2200` to `1800`.
+* **If you want more time per team:** Increase `TOTAL_RUNWAY` to `2600`.
 
 ---
 
