@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
-import { Calendar, ChevronLeft, ChevronRight, Clock, MapPin } from 'lucide-react';
+import { Calendar, ChevronLeft, ChevronRight } from 'lucide-react';
 import EventCard from './EventCard';
 
 function parseEventDate(dateStr) {
@@ -17,12 +17,16 @@ export default function EventsGrid({ events = [] }) {
   const filteredEvents = useMemo(() => {
     const list = events.filter((ev) => {
       if (filterStatus === 'all') return true;
+      if (filterStatus === 'upcoming') {
+        const s = ev.status?.toLowerCase();
+        return s === 'upcoming' || s === 'live';
+      }
       return ev.status?.toLowerCase() === filterStatus.toLowerCase();
     });
 
     return [...list].sort((a, b) => {
-      const aUpcoming = a.status?.toLowerCase() === 'upcoming';
-      const bUpcoming = b.status?.toLowerCase() === 'upcoming';
+      const aUpcoming = a.status?.toLowerCase() === 'upcoming' || a.status?.toLowerCase() === 'live';
+      const bUpcoming = b.status?.toLowerCase() === 'upcoming' || b.status?.toLowerCase() === 'live';
 
       if (aUpcoming && !bUpcoming) return -1;
       if (!aUpcoming && bUpcoming) return 1;
@@ -31,17 +35,28 @@ export default function EventsGrid({ events = [] }) {
       const bTime = parseEventDate(b.date);
 
       if (aUpcoming && bUpcoming) {
-        // Soonest upcoming event first
         return aTime - bTime;
       }
 
-      // Completed events: newest to oldest
       return bTime - aTime;
     });
   }, [events, filterStatus]);
 
-  const upcomingCount = events.filter((e) => e.status?.toLowerCase() === 'upcoming').length;
+  const upcomingCount = events.filter((e) => {
+    const s = e.status?.toLowerCase();
+    return s === 'upcoming' || s === 'live';
+  }).length;
   const completedCount = events.filter((e) => e.status?.toLowerCase() === 'completed').length;
+
+  // Auto-reset filter if active filter becomes empty
+  useEffect(() => {
+    if (filterStatus === 'upcoming' && upcomingCount === 0) {
+      setFilterStatus('all');
+    }
+    if (filterStatus === 'completed' && completedCount === 0) {
+      setFilterStatus('all');
+    }
+  }, [filterStatus, upcomingCount, completedCount]);
 
   const scroll = (direction) => {
     if (trackRef.current) {
@@ -52,55 +67,106 @@ export default function EventsGrid({ events = [] }) {
 
   const scrollToEvent = (index) => {
     if (trackRef.current) {
-      const cardWidth = window.innerWidth < 640 ? 320 + 24 : 380 + 24;
-      trackRef.current.scrollTo({ left: index * cardWidth, behavior: 'smooth' });
+      const el = trackRef.current;
+      const cardEl = el.children[index];
+      if (cardEl) {
+        cardEl.scrollIntoView({ behavior: 'smooth', inline: 'start', block: 'nearest' });
+      } else {
+        const cardWidth = window.innerWidth < 640 ? 320 : 380;
+        el.scrollTo({ left: index * cardWidth, behavior: 'smooth' });
+      }
       setActiveEventIndex(index);
     }
   };
 
-  // Touchpad calibrated wheel listener and scroll tracker
+  // Geek Room style scroll & touch interaction:
+  // Both vertical and horizontal scroll/touch gestures drive horizontal sliding
   useEffect(() => {
     const el = trackRef.current;
     if (!el) return;
 
     const handleScroll = () => {
-      const cardWidth = window.innerWidth < 640 ? 320 + 24 : 380 + 24;
+      const cardWidth = window.innerWidth < 640 ? 320 : 380;
       const index = Math.round(el.scrollLeft / cardWidth);
       setActiveEventIndex(Math.min(Math.max(index, 0), filteredEvents.length - 1));
     };
 
+    // 1. Wheel handling (Trackpad / Mouse wheel)
     const onWheel = (e) => {
-      // Allow native two-finger horizontal swipes to pass unhindered
-      if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) {
+      const maxScroll = el.scrollWidth - el.clientWidth;
+      if (maxScroll <= 4) return;
+
+      // Unify primary delta from either vertical or horizontal scroll
+      const primaryDelta = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
+      if (Math.abs(primaryDelta) < 3) return;
+
+      const atLeft = el.scrollLeft <= 5;
+      const atRight = Math.ceil(el.scrollLeft) >= maxScroll - 5;
+
+      // Allow natural page scroll once boundaries are hit
+      if ((primaryDelta > 0 && atRight) || (primaryDelta < 0 && atLeft)) {
         return;
       }
 
-      const atLeft = el.scrollLeft <= 5 && e.deltaY < 0;
-      const atRight = Math.ceil(el.scrollLeft + el.clientWidth) >= el.scrollWidth - 5 && e.deltaY > 0;
-
-      // At edges, allow page vertical scrolling
-      if (atLeft || atRight) {
-        return;
-      }
-
-      // Calibrated Touchpad detection: continuous pixel delta with deltaMode === 0
-      const isTouchpad = e.deltaMode === 0 && Math.abs(e.deltaY) < 65;
+      // Convert vertical/horizontal wheel scroll into horizontal track scroll
       e.preventDefault();
-
+      const isTouchpad = e.deltaMode === 0 && Math.abs(primaryDelta) < 65;
       if (isTouchpad) {
-        // 1:1 direct tracking without queueing smooth animations
-        el.scrollLeft += e.deltaY;
+        el.scrollLeft += primaryDelta;
       } else {
-        // Discrete mouse wheel notches
-        el.scrollBy({ left: e.deltaY * 1.2, behavior: 'smooth' });
+        el.scrollBy({ left: primaryDelta * 1.2, behavior: 'smooth' });
+      }
+    };
+
+    // 2. Touch handling on smartphones (Geek Room touch scroll)
+    let touchStartX = 0;
+    let touchStartY = 0;
+    let startScrollLeft = 0;
+
+    const onTouchStart = (e) => {
+      if (e.touches.length !== 1) return;
+      touchStartX = e.touches[0].clientX;
+      touchStartY = e.touches[0].clientY;
+      startScrollLeft = el.scrollLeft;
+    };
+
+    const onTouchMove = (e) => {
+      if (e.touches.length !== 1) return;
+      const maxScroll = el.scrollWidth - el.clientWidth;
+      if (maxScroll <= 4) return;
+
+      const curX = e.touches[0].clientX;
+      const curY = e.touches[0].clientY;
+      const diffX = touchStartX - curX; // positive = dragging left -> scroll right
+      const diffY = touchStartY - curY; // positive = dragging up -> scroll right
+
+      // Unify vertical or horizontal touch intent (Geek Room style)
+      const primaryDiff = Math.abs(diffX) > Math.abs(diffY) ? diffX : diffY;
+
+      const atLeft = el.scrollLeft <= 4;
+      const atRight = Math.ceil(el.scrollLeft) >= maxScroll - 4;
+
+      // At boundaries, do not preventDefault -> allows finger to scroll page vertically!
+      if ((primaryDiff > 0 && atRight) || (primaryDiff < 0 && atLeft)) {
+        return;
+      }
+
+      // Inside track: convert vertical or horizontal touch swipe into horizontal card translation
+      if (Math.abs(primaryDiff) > 5) {
+        e.preventDefault();
+        el.scrollLeft = startScrollLeft + primaryDiff;
       }
     };
 
     el.addEventListener('wheel', onWheel, { passive: false });
+    el.addEventListener('touchstart', onTouchStart, { passive: true });
+    el.addEventListener('touchmove', onTouchMove, { passive: false });
     el.addEventListener('scroll', handleScroll, { passive: true });
 
     return () => {
       el.removeEventListener('wheel', onWheel);
+      el.removeEventListener('touchstart', onTouchStart);
+      el.removeEventListener('touchmove', onTouchMove);
       el.removeEventListener('scroll', handleScroll);
     };
   }, [filteredEvents.length]);
@@ -108,11 +174,11 @@ export default function EventsGrid({ events = [] }) {
   return (
     <div
       id="events"
-      className="min-h-[calc(100vh-5rem)] flex flex-col justify-center py-6 sm:py-8 snap-start scroll-mt-20 relative z-10"
+      className="flex flex-col pt-2 sm:pt-4 pb-6 sm:pb-8 snap-start scroll-mt-20 relative z-10"
     >
       
       {/* Section Header with date prominence */}
-      <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-6 gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-5 gap-3.5">
         <div>
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-zinc-900 border border-white/10 mb-2">
             <Calendar className="w-3.5 h-3.5 text-emerald-400" />
@@ -126,7 +192,7 @@ export default function EventsGrid({ events = [] }) {
           </h2>
         </div>
 
-        {/* Filter Tabs and Navigation Controls */}
+        {/* Filter Tabs and Navigation Controls - Only shows tabs that have > 0 events */}
         <div className="flex items-center gap-3">
           <div className="inline-flex p-1 rounded-lg bg-zinc-950 border border-white/10">
             <button
@@ -139,26 +205,32 @@ export default function EventsGrid({ events = [] }) {
             >
               ALL ({events.length})
             </button>
-            <button
-              onClick={() => setFilterStatus('upcoming')}
-              className={`px-3 py-1.5 rounded-md font-mono text-xs transition-colors ${
-                filterStatus === 'upcoming'
-                  ? 'bg-emerald-500 text-black font-bold'
-                  : 'text-zinc-300 hover:text-white'
-              }`}
-            >
-              UPCOMING ({upcomingCount})
-            </button>
-            <button
-              onClick={() => setFilterStatus('completed')}
-              className={`px-3 py-1.5 rounded-md font-mono text-xs transition-colors ${
-                filterStatus === 'completed'
-                  ? 'bg-emerald-500 text-black font-bold'
-                  : 'text-zinc-300 hover:text-white'
-              }`}
-            >
-              COMPLETED ({completedCount})
-            </button>
+
+            {upcomingCount > 0 && (
+              <button
+                onClick={() => setFilterStatus('upcoming')}
+                className={`px-3 py-1.5 rounded-md font-mono text-xs transition-colors ${
+                  filterStatus === 'upcoming'
+                    ? 'bg-emerald-500 text-black font-bold'
+                    : 'text-zinc-300 hover:text-white'
+                }`}
+              >
+                UPCOMING ({upcomingCount})
+              </button>
+            )}
+
+            {completedCount > 0 && (
+              <button
+                onClick={() => setFilterStatus('completed')}
+                className={`px-3 py-1.5 rounded-md font-mono text-xs transition-colors ${
+                  filterStatus === 'completed'
+                    ? 'bg-emerald-500 text-black font-bold'
+                    : 'text-zinc-300 hover:text-white'
+                }`}
+              >
+                COMPLETED ({completedCount})
+              </button>
+            )}
           </div>
 
           <div className="hidden sm:flex items-center gap-1.5">
@@ -208,7 +280,7 @@ export default function EventsGrid({ events = [] }) {
             {/* Timeline event nodes */}
             <div className="relative flex items-center justify-between min-w-[540px] sm:min-w-0 gap-3 sm:gap-6 z-10 px-1">
               {filteredEvents.map((ev, idx) => {
-                const isUpcoming = ev.status?.toLowerCase() === 'upcoming';
+                const isUpcoming = ev.status?.toLowerCase() === 'upcoming' || ev.status?.toLowerCase() === 'live';
                 const isCurrent = activeEventIndex === idx;
 
                 return (

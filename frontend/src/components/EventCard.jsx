@@ -3,10 +3,13 @@ import { Calendar, MapPin, ExternalLink, Clock, Linkedin } from 'lucide-react';
 import ResilientImage from './ResilientImage';
 
 export default function EventCard({ event }) {
-  const isUpcoming = event.status?.toLowerCase() === 'upcoming';
+  const statusLower = (event.status || 'completed').toLowerCase();
+  const isLiveOrUpcoming = statusLower === 'upcoming' || statusLower === 'live';
+  const isUpcoming = statusLower === 'upcoming';
+  const statusLabel = statusLower === 'live' ? 'LIVE NOW' : isUpcoming ? 'UPCOMING' : 'COMPLETED';
 
   return (
-    <article className="group liquid-glass-card rounded-2xl overflow-hidden flex flex-col justify-between w-[320px] sm:w-[380px] shrink-0 snap-start select-none">
+    <article className="group liquid-glass-card rounded-2xl overflow-hidden flex flex-col justify-between w-[calc(92vw-2rem)] max-w-[340px] sm:max-w-none sm:w-[380px] shrink-0 snap-start select-none">
       
       {/* Event banner */}
       <div className="relative w-full h-48 bg-black/60 overflow-hidden">
@@ -18,16 +21,22 @@ export default function EventCard({ event }) {
           imageClassName="w-full h-full object-cover group-hover:scale-102 transition-transform duration-300"
         />
 
-        {/* Top Badges */}
+        {/* Top Badges: Status ALWAYS shown (Green for Live/Upcoming, Grey for Completed) */}
         <div className="absolute top-3 left-3 flex items-center gap-2 z-10">
-          <span className="px-2.5 py-0.5 rounded text-[11px] font-mono font-semibold bg-black/80 backdrop-blur-md text-emerald-400 border border-emerald-500/30">
-            {event.badge}
-          </span>
-          {isUpcoming && (
-            <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-emerald-500 text-black">
-              UPCOMING
+          {event.badge && (
+            <span className="px-2.5 py-0.5 rounded text-[11px] font-mono font-semibold bg-black/80 backdrop-blur-md text-emerald-400 border border-emerald-500/30">
+              {event.badge}
             </span>
           )}
+          <span
+            className={`px-2 py-0.5 rounded text-[10px] font-mono font-bold uppercase tracking-wider ${
+              isLiveOrUpcoming
+                ? 'bg-emerald-500 text-black shadow-sm'
+                : 'bg-zinc-800/90 text-zinc-300 border border-white/15 backdrop-blur-md'
+            }`}
+          >
+            {statusLabel}
+          </span>
         </div>
 
         {/* Prominent Date Tag */}

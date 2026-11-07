@@ -2,6 +2,7 @@ import React, { useRef, Component } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
+import InteractiveGridBackground from './components/InteractiveGridBackground';
 import Home from './pages/Home';
 import MemberDetailPage from './pages/MemberDetailPage';
 import NotFound from './pages/NotFound';
@@ -55,7 +56,9 @@ export default function App() {
   return (
     <ErrorBoundary>
       <BrowserRouter>
-        <div className="min-h-screen bg-[#070A0F] text-slate-100 flex flex-col justify-between selection:bg-[#00FF88] selection:text-black">
+        <div className="min-h-screen bg-[#070A0F] text-slate-100 flex flex-col justify-between selection:bg-[#00FF88] selection:text-black relative">
+          {/* Subtle cursor-reactive sci-fi grid background (PC) */}
+          <InteractiveGridBackground />
           {/* Fixed Navbar with Flight Target Container */}
           <Navbar navLogoTargetRef={navLogoTargetRef} />
 

@@ -14,7 +14,7 @@ export default function IdCard({ member }) {
   return (
     <div
       onClick={handleCardClick}
-      className="badge-container group cursor-pointer w-[285px] sm:w-[305px] shrink-0 snap-start select-none"
+      className="badge-container group cursor-pointer w-[min(calc(100vw-4.5rem),305px)] sm:w-[305px] shrink-0 snap-start select-none"
     >
       {/* Physical Lanyard Assembly: Clip and Strap */}
       <div className="relative w-full h-6 sm:h-7 flex items-center justify-center">

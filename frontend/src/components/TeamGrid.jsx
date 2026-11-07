@@ -49,7 +49,7 @@ export default function TeamGrid({ members = [], subTeams = [] }) {
     }
   }, []);
 
-  // Handle wheel-driven horizontal scroll and team switching with Touchpad calibration
+  // Handle wheel and smartphone touch gestures (Geek Room style: vertical or horizontal drives cards)
   useEffect(() => {
     const trackEl = trackRef.current;
     if (!trackEl) return;
@@ -62,63 +62,53 @@ export default function TeamGrid({ members = [], subTeams = [] }) {
     const EDGE_SWITCH_THRESHOLD = 140;
     const SWITCH_COOLDOWN = 600;
 
+    // 1. Wheel handler (Trackpad / Mouse)
     const onWheel = (e) => {
-      // Allow native horizontal swipe gestures from touchpad
-      if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) {
-        return;
-      }
-
-      // Ignore trivial noise
-      if (Math.abs(e.deltaY) < 3) return;
-
-      const isScrollingDown = e.deltaY > 0;
-      const isScrollingUp = e.deltaY < 0;
-
       const maxScrollLeft = trackEl.scrollWidth - trackEl.clientWidth;
-      const atRightEnd = maxScrollLeft <= 4 || Math.ceil(trackEl.scrollLeft) >= maxScrollLeft - 6;
+      if (maxScrollLeft <= 4) return;
+
+      const primaryDelta = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
+      if (Math.abs(primaryDelta) < 3) return;
+
+      const atRightEnd = Math.ceil(trackEl.scrollLeft) >= maxScrollLeft - 6;
       const atLeftEnd = trackEl.scrollLeft <= 6;
+      const isTouchpad = e.deltaMode === 0 && Math.abs(primaryDelta) < 65;
 
-      // Touchpad detection: continuous sub-integer/pixel delta
-      const isTouchpad = e.deltaMode === 0 && Math.abs(e.deltaY) < 65;
-
-      // 1. Horizontal scroll within current team cards
-      if (isScrollingDown && !atRightEnd) {
+      // Card horizontal scrolling
+      if (primaryDelta > 0 && !atRightEnd) {
         e.preventDefault();
         edgeAccumulator = 0;
         if (isTouchpad) {
-          trackEl.scrollLeft += e.deltaY;
+          trackEl.scrollLeft += primaryDelta;
         } else {
-          trackEl.scrollBy({ left: e.deltaY * 1.2, behavior: 'smooth' });
+          trackEl.scrollBy({ left: primaryDelta * 1.2, behavior: 'smooth' });
         }
         return;
       }
 
-      if (isScrollingUp && !atLeftEnd) {
+      if (primaryDelta < 0 && !atLeftEnd) {
         e.preventDefault();
         edgeAccumulator = 0;
         if (isTouchpad) {
-          trackEl.scrollLeft += e.deltaY;
+          trackEl.scrollLeft += primaryDelta;
         } else {
-          trackEl.scrollBy({ left: e.deltaY * 1.2, behavior: 'smooth' });
+          trackEl.scrollBy({ left: primaryDelta * 1.2, behavior: 'smooth' });
         }
         return;
       }
 
-      // 2. At right edge:
-      // If at the last team (Design Team), do NOT preventDefault -> let user scroll to Footer!
-      if (isScrollingDown && atRightEnd) {
+      // At right edge:
+      if (primaryDelta > 0 && atRightEnd) {
         if (activeTeamIndex >= orderedTeams.length - 1) {
-          // Release scroll lock: allow natural page scroll into footer
+          // Last team: release scroll to let user reach footer
           return;
         }
 
-        // Between teams: intentional scroll switches to next team
+        // Between teams: intentional scroll threshold switches team
         const now = Date.now();
-        if (now - lastSwitchTime < SWITCH_COOLDOWN) {
-          return;
-        }
+        if (now - lastSwitchTime < SWITCH_COOLDOWN) return;
 
-        edgeAccumulator += e.deltaY;
+        edgeAccumulator += primaryDelta;
         if (edgeAccumulator >= EDGE_SWITCH_THRESHOLD && !isSwitching) {
           isSwitching = true;
           lastSwitchTime = now;
@@ -132,20 +122,17 @@ export default function TeamGrid({ members = [], subTeams = [] }) {
         return;
       }
 
-      // 3. At left edge:
-      // If at the first team (Technical Team), do NOT preventDefault -> let user scroll to Events!
-      if (isScrollingUp && atLeftEnd) {
+      // At left edge:
+      if (primaryDelta < 0 && atLeftEnd) {
         if (activeTeamIndex === 0) {
-          // Release scroll lock: allow natural page scroll back up
+          // First team: release scroll to let user reach Events
           return;
         }
 
         const now = Date.now();
-        if (now - lastSwitchTime < SWITCH_COOLDOWN) {
-          return;
-        }
+        if (now - lastSwitchTime < SWITCH_COOLDOWN) return;
 
-        edgeAccumulator += e.deltaY;
+        edgeAccumulator += primaryDelta;
         if (edgeAccumulator <= -EDGE_SWITCH_THRESHOLD && !isSwitching) {
           isSwitching = true;
           lastSwitchTime = now;
@@ -162,7 +149,68 @@ export default function TeamGrid({ members = [], subTeams = [] }) {
       edgeAccumulator = 0;
     };
 
+    // 2. Touch handler for smartphones (Geek Room touch scroll)
+    let touchStartX = 0;
+    let touchStartY = 0;
+    let startScrollLeft = 0;
+
+    const onTouchStart = (e) => {
+      if (e.touches.length !== 1) return;
+      touchStartX = e.touches[0].clientX;
+      touchStartY = e.touches[0].clientY;
+      startScrollLeft = trackEl.scrollLeft;
+    };
+
+    const onTouchMove = (e) => {
+      if (e.touches.length !== 1) return;
+      const maxScroll = trackEl.scrollWidth - trackEl.clientWidth;
+      if (maxScroll <= 4) return;
+
+      const curX = e.touches[0].clientX;
+      const curY = e.touches[0].clientY;
+      const diffX = touchStartX - curX;
+      const diffY = touchStartY - curY;
+
+      const primaryDiff = Math.abs(diffX) > Math.abs(diffY) ? diffX : diffY;
+
+      const atLeft = trackEl.scrollLeft <= 5;
+      const atRight = Math.ceil(trackEl.scrollLeft) >= maxScroll - 5;
+
+      // Boundary touch handling:
+      if (primaryDiff > 0 && atRight) {
+        if (activeTeamIndex < orderedTeams.length - 1 && primaryDiff > 70 && !isSwitching) {
+          isSwitching = true;
+          setActiveTeamIndex((prev) => Math.min(prev + 1, orderedTeams.length - 1));
+          setTimeout(() => {
+            if (trackEl) trackEl.scrollLeft = 0;
+            isSwitching = false;
+          }, 80);
+        }
+        return;
+      }
+
+      if (primaryDiff < 0 && atLeft) {
+        if (activeTeamIndex > 0 && primaryDiff < -70 && !isSwitching) {
+          isSwitching = true;
+          setActiveTeamIndex((prev) => Math.max(prev - 1, 0));
+          setTimeout(() => {
+            if (trackEl) trackEl.scrollLeft = trackEl.scrollWidth;
+            isSwitching = false;
+          }, 80);
+        }
+        return;
+      }
+
+      // Convert vertical/horizontal touch drag to horizontal card translation
+      if (Math.abs(primaryDiff) > 5) {
+        e.preventDefault();
+        trackEl.scrollLeft = startScrollLeft + primaryDiff;
+      }
+    };
+
     trackEl.addEventListener('wheel', onWheel, { passive: false });
+    trackEl.addEventListener('touchstart', onTouchStart, { passive: true });
+    trackEl.addEventListener('touchmove', onTouchMove, { passive: false });
     trackEl.addEventListener('scroll', updateScrollProgress, { passive: true });
     window.addEventListener('resize', updateScrollProgress, { passive: true });
 
@@ -171,6 +219,8 @@ export default function TeamGrid({ members = [], subTeams = [] }) {
     return () => {
       cancelAnimationFrame(rafId);
       trackEl.removeEventListener('wheel', onWheel);
+      trackEl.removeEventListener('touchstart', onTouchStart);
+      trackEl.removeEventListener('touchmove', onTouchMove);
       trackEl.removeEventListener('scroll', updateScrollProgress);
       window.removeEventListener('resize', updateScrollProgress);
     };
@@ -207,11 +257,11 @@ export default function TeamGrid({ members = [], subTeams = [] }) {
         </div>
       </div>
 
-      {/* INNER DIV SNAP: Snaps directly to the active team & larger card view */}
+      {/* INNER DIV SNAP: Snaps directly to active team with responsive padding */}
       <div
         id="team-focus-card"
         ref={boxRef}
-        className="liquid-glass rounded-3xl p-5 sm:p-7 relative flex flex-col justify-between shadow-2xl snap-start scroll-mt-24"
+        className="liquid-glass rounded-3xl p-4 sm:p-7 relative flex flex-col justify-between shadow-2xl snap-start scroll-mt-24"
       >
         {/* Top Controls: Team Switcher Tabs + Search & Stepper */}
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3.5 pb-4 border-b border-white/10">
@@ -305,11 +355,11 @@ export default function TeamGrid({ members = [], subTeams = [] }) {
           </div>
         </div>
 
-        {/* Horizontal Track of ID Badges with Snap - Left margin on PC so leftmost card is not clipped */}
+        {/* Horizontal Track of ID Badges with Snap - Protected margins to avoid cutoffs */}
         {currentMembers.length > 0 ? (
           <div
             ref={trackRef}
-            className="flex gap-6 overflow-x-auto py-3 px-2 sm:px-6 md:px-8 no-scrollbar scroll-smooth snap-x snap-mandatory scroll-pl-2 sm:scroll-pl-6 md:scroll-pl-8"
+            className="flex gap-4 sm:gap-6 overflow-x-auto py-3 px-1 sm:px-6 md:px-8 no-scrollbar scroll-smooth snap-x snap-mandatory scroll-pl-1 sm:scroll-pl-6 md:scroll-pl-8"
           >
             {currentMembers.map((member) => (
               <IdCard key={member.id} member={member} />
