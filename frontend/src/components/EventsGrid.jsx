@@ -342,9 +342,7 @@ export default function EventsGrid({ events = [] }) {
                       Event Chronology Timeline
                     </span>
                   </div>
-                  <span className="text-[10px] sm:text-[11px] text-zinc-500 font-mono">
-                    CHRONOLOGICAL // LIVE & RECENT FIRST
-                  </span>
+                  
                 </div>
 
                 {/* Timeline Inner Bar */}
