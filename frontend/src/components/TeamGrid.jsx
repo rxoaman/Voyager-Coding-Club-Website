@@ -38,15 +38,15 @@ export default function TeamGrid({ members = [], subTeams = [] }) {
 
   // Calculate dynamic travel distance for horizontal scroll
   const updateTravelDistance = useCallback(() => {
-    if (!trackRef.current) return;
+    if (!trackRef.current || !boxRef.current) return;
     const isLargeScreen = window.innerWidth >= 768;
     setIsDesktop(isLargeScreen);
 
     if (isLargeScreen) {
       const trackWidth = trackRef.current.scrollWidth;
-      const viewportWidth = window.innerWidth;
-      // Add right padding so the last ID card clears comfortably
-      const distance = Math.max(0, trackWidth - viewportWidth + 96);
+      const containerWidth = boxRef.current.clientWidth;
+      // Add padding so the last ID card clears inside the container comfortably
+      const distance = Math.max(0, trackWidth - containerWidth + 48);
       setTravelDistance(distance);
       if (distance <= 0) {
         setScrollProgress(1);
@@ -92,6 +92,7 @@ export default function TeamGrid({ members = [], subTeams = [] }) {
     });
     resizeObserver.observe(sectionRef.current);
     if (trackRef.current) resizeObserver.observe(trackRef.current);
+    if (boxRef.current) resizeObserver.observe(boxRef.current);
 
     return () => {
       if (scrollObserver && typeof scrollObserver.revert === 'function') {

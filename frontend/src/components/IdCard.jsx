@@ -14,36 +14,36 @@ export default function IdCard({ member }) {
   return (
     <div
       onClick={handleCardClick}
-      className="badge-container group cursor-pointer w-[min(calc(100vw-4.5rem),305px)] sm:w-[305px] shrink-0 snap-start select-none"
+      className="badge-container group cursor-pointer w-[min(calc(100vw-5rem),295px)] sm:w-[295px] shrink-0 snap-start select-none"
     >
       {/* Physical Lanyard Assembly: Clip and Strap */}
-      <div className="relative w-full h-6 sm:h-7 flex items-center justify-center">
+      <div className="relative w-full h-6 flex items-center justify-center">
         <div className="lanyard-strap" />
         <div className="lanyard-clip" />
       </div>
 
-      {/* The Physical Card Body with Liquid Glass effect */}
-      <div className="id-card-badge liquid-glass-card p-4 sm:p-4.5 flex flex-col justify-between h-[435px] sm:h-[455px] relative">
+      {/* The Physical Card Body with Liquid Glass effect - Fixed overflow protection */}
+      <div className="id-card-badge liquid-glass-card p-3.5 sm:p-4 flex flex-col justify-between h-[420px] sm:h-[435px] relative overflow-hidden rounded-2xl border border-white/10">
         
         {/* Lanyard slot punch */}
-        <div className="lanyard-slot mb-2.5">
+        <div className="lanyard-slot mb-2 shrink-0">
           <div className="absolute inset-0 flex items-center justify-center">
-            <div className="w-6 h-1 bg-zinc-800 rounded-full" />
+            <div className="w-5 h-1 bg-zinc-800 rounded-full" />
           </div>
         </div>
 
         {/* Card Header */}
-        <div className="flex items-center justify-between px-1 mb-2">
+        <div className="flex items-center justify-between px-1 mb-1.5 shrink-0">
           <span className="font-mono text-[11px] text-zinc-400 font-semibold tracking-wider">
             {member.badgeId || `VYR-${member.badgeNumber}`}
           </span>
-          <span className="font-mono text-[10px] uppercase tracking-widest text-emerald-400 bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-500/30">
+          <span className="font-mono text-[9px] uppercase tracking-widest text-emerald-400 bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-500/30 font-bold">
             ACTIVE
           </span>
         </div>
 
-        {/* Member Portrait Frame - Larger and prominent */}
-        <div className="relative w-full h-[220px] sm:h-[235px] rounded-xl overflow-hidden border border-white/10 bg-black/60 shadow-inner">
+        {/* Member Portrait Frame - Sized to prevent any card overflow */}
+        <div className="relative w-full h-[200px] sm:h-[210px] rounded-xl overflow-hidden border border-white/10 bg-black/60 shadow-inner shrink-0">
           <ResilientImage
             src={member.cardImage}
             alt={`${member.name} ID Card`}
@@ -53,22 +53,22 @@ export default function IdCard({ member }) {
           />
         </div>
 
-        {/* Member Information - Larger readable typography */}
-        <div className="mt-2.5 space-y-1 text-left px-1">
-          <div className="flex items-center justify-between">
-            <h3 className="font-display font-bold text-base sm:text-lg text-white group-hover:text-emerald-400 transition-colors truncate">
+        {/* Member Information */}
+        <div className="mt-2 space-y-0.5 text-left px-1 shrink-0">
+          <div className="flex items-center justify-between gap-1">
+            <h3 className="font-display font-bold text-sm sm:text-base text-white group-hover:text-emerald-400 transition-colors truncate">
               {member.name}
             </h3>
-            <ArrowUpRight className="w-4 h-4 text-zinc-400 group-hover:text-emerald-400 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+            <ArrowUpRight className="w-3.5 h-3.5 text-zinc-400 group-hover:text-emerald-400 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform shrink-0" />
           </div>
 
-          <p className="font-mono text-xs sm:text-sm text-zinc-400 truncate">
+          <p className="font-mono text-xs text-zinc-400 truncate">
             {member.designation || member.title}
           </p>
         </div>
 
         {/* Card Footer: Barcode + Social Links */}
-        <div className="mt-2.5 pt-2 border-t border-white/10 flex items-center justify-between px-1">
+        <div className="mt-2 pt-2 border-t border-white/10 flex items-center justify-between px-1 shrink-0">
           {/* Barcode */}
           <div className="barcode-strip" title="Security Token Hash">
             <div className="barcode-bar w-1" />

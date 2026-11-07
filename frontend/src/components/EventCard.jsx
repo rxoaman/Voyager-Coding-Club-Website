@@ -4,24 +4,23 @@ import ResilientImage from './ResilientImage';
 
 export default function EventCard({ event }) {
   const statusLower = (event.status || 'completed').toLowerCase();
-  const isLiveOrUpcoming = statusLower === 'upcoming' || statusLower === 'live';
-  const isUpcoming = statusLower === 'upcoming';
-  const statusLabel = statusLower === 'live' ? 'LIVE NOW' : isUpcoming ? 'UPCOMING' : 'COMPLETED';
+  const isLive = statusLower === 'live';
+  const statusLabel = isLive ? 'LIVE NOW' : 'COMPLETED';
 
   return (
-    <article className="group liquid-glass-card rounded-2xl overflow-hidden flex flex-col justify-between w-[calc(92vw-2rem)] max-w-[340px] sm:max-w-none sm:w-[380px] shrink-0 snap-start select-none">
+    <article className="group liquid-glass-card rounded-2xl overflow-hidden flex flex-col justify-between w-[calc(90vw-2.5rem)] max-w-[340px] sm:max-w-none sm:w-[370px] shrink-0 snap-start select-none border border-white/10">
       
       {/* Event banner */}
-      <div className="relative w-full h-48 bg-black/60 overflow-hidden">
+      <div className="relative w-full h-44 sm:h-48 bg-black/60 overflow-hidden shrink-0">
         <ResilientImage
           src={event.imageUrl}
           alt={event.title}
           fallbackType="banner"
           className="w-full h-full"
-          imageClassName="w-full h-full object-cover group-hover:scale-102 transition-transform duration-300"
+          imageClassName="w-full h-full object-cover group-hover:scale-103 transition-transform duration-300"
         />
 
-        {/* Top Badges: Status ALWAYS shown (Green for Live/Upcoming, Grey for Completed) */}
+        {/* Top Badges: Status (Green for Live, Grey for Completed) */}
         <div className="absolute top-3 left-3 flex items-center gap-2 z-10">
           {event.badge && (
             <span className="px-2.5 py-0.5 rounded text-[11px] font-mono font-semibold bg-black/80 backdrop-blur-md text-emerald-400 border border-emerald-500/30">
@@ -30,8 +29,8 @@ export default function EventCard({ event }) {
           )}
           <span
             className={`px-2 py-0.5 rounded text-[10px] font-mono font-bold uppercase tracking-wider ${
-              isLiveOrUpcoming
-                ? 'bg-emerald-500 text-black shadow-sm'
+              isLive
+                ? 'bg-emerald-500 text-black shadow-sm font-bold'
                 : 'bg-zinc-800/90 text-zinc-300 border border-white/15 backdrop-blur-md'
             }`}
           >
@@ -47,8 +46,8 @@ export default function EventCard({ event }) {
       </div>
 
       {/* Content */}
-      <div className="p-5 flex-1 flex flex-col justify-between">
-        <div className="space-y-3">
+      <div className="p-4 sm:p-5 flex-1 flex flex-col justify-between">
+        <div className="space-y-2.5">
           {/* Metadata: Date, Time and strictly KCCITM as venue */}
           <div className="flex items-center gap-3 text-xs font-mono text-zinc-400">
             <div className="flex items-center gap-1 text-emerald-400 font-semibold">
@@ -68,7 +67,7 @@ export default function EventCard({ event }) {
           </div>
 
           {/* Title */}
-          <h3 className="font-display font-bold text-lg text-white group-hover:text-emerald-400 transition-colors line-clamp-1">
+          <h3 className="font-display font-bold text-base sm:text-lg text-white group-hover:text-emerald-400 transition-colors line-clamp-1">
             {event.title}
           </h3>
 
@@ -83,7 +82,7 @@ export default function EventCard({ event }) {
               {event.highlights.map((h, i) => (
                 <span
                   key={i}
-                  className="text-[11px] font-mono px-2 py-0.5 rounded liquid-glass-button text-zinc-300"
+                  className="text-[10px] font-mono px-2 py-0.5 rounded liquid-glass-button text-zinc-300"
                 >
                   {h}
                 </span>
@@ -92,8 +91,8 @@ export default function EventCard({ event }) {
           )}
         </div>
 
-        {/* Action Link: Register Now for Upcoming events, or LinkedIn Post for completed */}
-        <div className="mt-5 pt-3.5 border-t border-white/10 flex items-center justify-between">
+        {/* Action Link: Register Now for Live event, LinkedIn Post for completed */}
+        <div className="mt-4 pt-3 border-t border-white/10 flex items-center justify-between">
           <span className="text-[11px] font-mono text-zinc-400">Voyager Coding Club</span>
 
           <a
@@ -101,12 +100,12 @@ export default function EventCard({ event }) {
             target="_blank"
             rel="noopener noreferrer"
             className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-mono text-xs transition-all ${
-              isUpcoming
+              isLive
                 ? 'bg-emerald-500 hover:bg-emerald-400 text-black font-bold shadow-[0_0_12px_rgba(16,185,129,0.3)]'
                 : 'liquid-glass-button text-zinc-200 hover:text-white'
             }`}
           >
-            {isUpcoming ? (
+            {isLive ? (
               <>
                 <span>{event.actionText || 'Register Now'}</span>
                 <ExternalLink className="w-3.5 h-3.5 text-black" />
